@@ -1,0 +1,33 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [1.0.0] - 2026-09-30
+
+### Added
+- Extracted FesterUO into an independent standalone repository and Docker Compose deployment targeting ServUO Publish 57 with .NET 10 build and Mono runtime.
+- Added [29-loot-filter.patch](patches/29-loot-filter.patch) and custom script system in `custom-scripts/LootFilter/` providing an ARPG-style loot visibility filter (`[LootFilter`) for ground and corpse equipment across 8 categories and 87+ item properties with numeric threshold filtering and equipment-only protection guarantees.
+- Added [28-dyes-target-handler.patch](patches/28-dyes-target-handler.patch) and custom script system in `custom-scripts/RuneBookandSpellBookDyeTubs/` providing customizable dye tubs for runebooks and spellbooks with 16 preset color palettes and visual palette gumps.
+- Added [27-hunter-bestiary.patch](patches/27-hunter-bestiary.patch) and custom script system in `custom-scripts/ExileHunterBestiary/` providing a 193-creature horizontal progression bestiary with collectible monster treatises, damage mastery bonuses, blessed `HunterBestiary` grimoire, and book gump (`[Bestiary`).
+- Added custom script system in `custom-scripts/ApexHunt/` providing an automated server-wide PvM hunting competition system (`[ApexHunt`, `[ApexHuntToggle`, `[ApexHuntTop`, `[ApexHuntStart`, `[ApexHuntStop`) with tiered target creature selection, movable HUD tracker, and leaderboard gump.
+- Added [26-sanctuary-ward.patch](patches/26-sanctuary-ward.patch) and `SanctuaryWard.cs` in `custom-scripts/FesterUO/` providing the Talisman of Sanctuary (`SanctuaryTalisman`), a blessed item suppressing hostile creature aggro outdoors while allowing mobs to defend themselves if attacked.
+- Added `HarvestConfig.cs` in `custom-scripts/FesterUO/` and settings in `Config/FesterUO/Harvest.cfg` to dynamically configure resource bank respawn times and capacities with GM inspection command `[HarvestInfo`.
+- Added `TillermanGump.cs` in `custom-scripts/FesterUO/` providing player command `[tillerman` to open an intelligent boat navigation control gump.
+- Added `TreasureMapDecoder.cs` and `SOSDecoder.cs` in `custom-scripts/zerodowned/` providing instant transporter items for maps and sunken treasure.
+- Added `RemoteBank.cs` in `custom-scripts/FesterUO/` providing player command `[rbank` for remote personal bank access.
+- Added `WildernessReagents.cs` in `custom-scripts/FesterUO/` and `Config/FesterUO/Reagents.cfg` providing automated wilderness ground reagent spawning across Trammel and Felucca.
+- Added custom gathering and utility scripts in `custom-scripts/FesterUO/` (`ResourceSatchel.cs`, `CustomAutoTools.cs`) providing auto-smelting, auto-sawing, auto-filleting, corpse hide conversion, sheep shearing, area crop scything, and automatic resource routing with 100% weight reduction.
+- Added `CorpseFinder.cs` in `custom-scripts/FesterUO/` providing `[Corpse` navigation command directing an in-game quest arrow straight to fallen bodies.
+- Added `FesterUOGuideBook.cs` in `custom-scripts/FesterUO/` providing an in-game reference tome distributed to the first character per account.
+- Added `GlobalChat.cs` in `custom-scripts/FesterUO/` providing `[c <message>` and `[chat <message>` server-wide broadcast commands in cyan text.
+- Added explicit runtime configuration files in `Config/` (`Accounts.cfg`, `AutoRestart.cfg`, `AutoSave.cfg`, `Champions.cfg`, `DataPath.cfg`, `Expansion.cfg`, `General.cfg`, `Harvest.cfg`, `Housing.cfg`, `Loot.cfg`, `PlayerCaps.cfg`, `Server.cfg`, `Stables.cfg`, `TreasureMaps.cfg`, `Vendors.cfg`, `VetRewards.cfg`).
+- Added `manage-patches.sh` CLI utility with idempotent patch application, already-applied detection, upstream synchronization, and Dockerfile commit alignment.
+
+### Changed
+- Configured [PlayerCaps.cfg](Config/ServUO/PlayerCaps.cfg) to support dual-character playstyles: `TotalStatCap=900`, individual stat caps to `250` (scroll ceiling `300`), `TotalSkillCap=24000` (2400.0%), and disabled anti-macro and stat gain delays.
+- Configured vendor trade commodity baseline to 640 in [Vendors.cfg](Config/ServUO/Vendors.cfg) and disabled low-demand restock decay.
+- Enhanced harvest notifications for auto-tools to state specific ore and wood types colored according to native resource hues.

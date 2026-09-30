@@ -1,0 +1,65 @@
+name: Bug Report
+description: Create a report to help us reproduce and fix an issue with FesterUO gameplay, scripts, patches, or container configuration.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report a bug! Please fill out the information below.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Custom Script (ApexHunt, Bestiary, LootFilter, FesterUO, etc.)
+        - Engine Patch (patches/*.patch)
+        - Configuration (Config/*.cfg)
+        - Docker Container / Deployment
+        - Client Interaction / Gump
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: In-game commands or server steps to reproduce the behavior.
+      placeholder: |
+        1. Log in with character
+        2. Use command '[...' or item '...'
+        3. Observe error or unexpected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server Logs / Console Output / Crash Dumps
+      description: Please copy and paste any relevant logs from `docker compose logs festeruo` or `Logs/` crash dumps.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Info
+      description: Client version, OS version, Docker version.
+      placeholder: |
+        - Client: ClassicUO / TazUO / OSI 7.0.117.0
+        - Docker version: 27.x
+        - Host OS: Linux
+    validations:
+      required: false

@@ -1,0 +1,10 @@
+# Environment secrets
+.env
+
+# Container volumes and runtime data
+Client/
+Logs/
+Saves/
+Saves.backup*/
+upstream/
+ServUO-pub57.zip

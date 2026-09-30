@@ -1,6 +1,6 @@
-# ServUO Server Container
+# FesterUO
 
-This directory (`servuo/`) contains the complete Dockerized deployment configuration, core engine patches, runtime settings, custom gameplay scripts, and operational tooling for running a private **[ServUO](https://github.com/ServUO/ServUO)** (Publish 57) Ultima Online server within this infrastructure stack.
+This repository contains the complete Dockerized deployment configuration, core engine patches, runtime settings, custom gameplay scripts, and operational tooling for running a private **[ServUO](https://github.com/ServUO/ServUO)** (Publish 57) Ultima Online server within this infrastructure stack.
 
 ---
 
@@ -17,7 +17,7 @@ ServUO is an open-source, community-driven C# Ultima Online server emulator targ
 ### Directory Layout
 
 ```
-servuo/
+FesterUO/
 ├── Dockerfile             # Multi-stage container build (.NET 10 SDK & Mono runtime)
 ├── manage-patches.sh      # CLI tool for checking, exporting, and updating patches
 ├── patches/               # Modular unified diff patches applied during Docker build
@@ -99,11 +99,11 @@ The `servuo` service defined in `docker-compose.yaml` utilizes five host bind mo
 
 | Host Directory | Container Path | Mode | Purpose |
 | :--- | :--- | :--- | :--- |
-| `${SERVICE_DIR}/servuo/Client` | `/server/Client` | `ro` | Provides static UO client files required by ServUO for map geometry, statics, multi structures, and tile data. |
-| `${SERVICE_DIR}/servuo/Saves` | `/server/Saves` | `rw` | Stores persistent world data, account credentials, mobiles, items, and scheduled backups. |
-| `${SERVICE_DIR}/servuo/Logs` | `/server/Logs` | `rw` | Captures engine logs, command activity, and crash diagnostics on the host. |
-| `${SERVICE_DIR}/servuo/custom-scripts` | `/server/Scripts/Custom` | `rw` | Injects custom C# script files dynamically compiled by the .NET SDK on server launch. |
-| `${SERVICE_DIR}/servuo/Config` | `/server/Config` | `rw` | Injects custom configuration files (`.cfg`) read by the engine during startup. |
+| `${SERVICE_DIR}/FesterUO/Client` | `/server/Client` | `ro` | Provides static UO client files required by ServUO for map geometry, statics, multi structures, and tile data. |
+| `${SERVICE_DIR}/FesterUO/Saves` | `/server/Saves` | `rw` | Stores persistent world data, account credentials, mobiles, items, and scheduled backups. |
+| `${SERVICE_DIR}/FesterUO/Logs` | `/server/Logs` | `rw` | Captures engine logs, command activity, and crash diagnostics on the host. |
+| `${SERVICE_DIR}/FesterUO/custom-scripts` | `/server/Scripts/Custom` | `rw` | Injects custom C# script files dynamically compiled by the .NET SDK on server launch. |
+| `${SERVICE_DIR}/FesterUO/Config` | `/server/Config` | `rw` | Injects custom configuration files (`.cfg`) read by the engine during startup. |
 
 ### Populating the `Client/` Directory
 
@@ -114,7 +114,7 @@ ServUO requires an authentic installation of Ultima Online Classic client data f
 2. **Install the Client**:
    Install and run the game on a Windows computer or virtual machine. Allow the official patcher to complete all updates so all current `.uop`, `.mul`, and `Cliloc` files are fully populated.
 3. **Copy Files to Host**:
-   Copy the contents of the installed client folder (typically `C:\Program Files (x86)\Electronic Arts\Ultima Online Classic`) into `${SERVICE_DIR}/servuo/Client/` on your Docker host.
+   Copy the contents of the installed client folder (typically `C:\Program Files (x86)\Electronic Arts\Ultima Online Classic`) into `${SERVICE_DIR}/FesterUO/Client/` on your Docker host.
 4. **DataPath Configuration**:
    The Dockerfile automatically generates `/server/Config/DataPath.cfg` containing `CustomPath=/server/Client`, instructing ServUO to read all client assets from the mounted directory.
 
@@ -221,11 +221,11 @@ docker compose stop servuo
 ### Step 2: Clear the Saves and Logs Directories
 Back up the existing world save state, purge runtime data, and preserve gitkeep anchors:
 ```bash
-cp -r servuo/Saves servuo/Saves.backup.$(date +%Y%m%d)
-rm -rf servuo/Saves/* servuo/Saves/.[!.]*
-touch servuo/Saves/.gitkeep
-rm -rf servuo/Logs/*
-touch servuo/Logs/.gitkeep
+cp -r FesterUO/Saves FesterUO/Saves.backup.$(date +%Y%m%d)
+rm -rf FesterUO/Saves/* FesterUO/Saves/.[!.]*
+touch FesterUO/Saves/.gitkeep
+rm -rf FesterUO/Logs/*
+touch FesterUO/Logs/.gitkeep
 ```
 
 ### Step 3: Start ServUO

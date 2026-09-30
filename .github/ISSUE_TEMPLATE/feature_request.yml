@@ -1,0 +1,51 @@
+name: Feature / Custom System Request
+description: Suggest a new custom gameplay system, script, engine patch, or configuration setting for FesterUO.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Propose a new gameplay mechanic, custom script integration, or server improvement for FesterUO.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - Quality of Life / Automation
+        - PvM / Hunting / Monster System
+        - Housing / Travel / Fixtures
+        - Items / Equipment / Crafting
+        - Economy / Vendors / Shard Progression
+        - Engine Patch / ServUO Core
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: What challenge or friction does this feature address for the cooperative server experience?
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Gameplay Mechanics
+      description: Describe how the feature, item, command, or script should work in-game.
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Upstream / Community References (if applicable)
+      description: If this is an existing community script or patch, provide links to servuo.dev, GitHub, or original authors.
+      placeholder: https://www.servuo.dev/archive/...
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context, gump mockups, or balance considerations here.
+    validations:
+      required: false

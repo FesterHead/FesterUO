@@ -1,0 +1,25 @@
+name: Pull Request
+description: Default pull request template for proposing changes to FesterUO.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing to FesterUO! Please fill out the sections below.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary of Changes
+      description: Provide a concise summary of the changes proposed in this PR.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Followed engine patch / script conventions in [AGENTS.md](../AGENTS.md) / [CONTRIBUTING.md](../CONTRIBUTING.md)
+        - label: Tested patches apply cleanly via `./manage-patches.sh check` (if modifying patches)
+        - label: Documented community author attribution and provenance in relevant README.md (if adding scripts)
+        - label: Updated [CHANGELOG.md](../CHANGELOG.md) adhering to Keep a Changelog & SemVer
+        - label: Validated container configuration with `docker compose config`
+        - label: Tested container build with `docker compose up -d --build` (0 compilation warnings/errors)

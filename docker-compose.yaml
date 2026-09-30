@@ -1,0 +1,39 @@
+services:
+  festeruo:
+    container_name: festeruo
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: festeruo:latest
+    user: "${PUID}:${PGID}"
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    labels:
+      - "containermon.enable=true"
+      - "diun.enable=false"
+    ports:
+      - "${PORT_FESTERUO:-2593}:2593"
+      - "${PORT_FESTERUO:-2593}:2593/udp"
+    dns:
+      - "${DNS_PRIMARY:-1.1.1.1}"
+      - "${DNS_SECONDARY:-1.0.0.1}"
+    volumes:
+      - "./Client:/server/Client:ro"
+      - "./Saves:/server/Saves"
+      - "./Logs:/server/Logs"
+      - "./custom-scripts:/server/Scripts/Custom"
+      - "./Config:/server/Config"
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "pidof mono || pidof dotnet || exit 1" ]
+      interval: 60s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
+    environment:
+      - "PGID=${PGID}"
+      - "PUID=${PUID}"
+      - "TZ=${TZ}"
+      - "UMASK=${UMASK:-022}"
+      - "DOTNET_CLI_HOME=/server/.dotnet"
+      - "HOME=/server"

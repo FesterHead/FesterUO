@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Tuned `LegendaryMaster` configuration in `Config/LegendaryMaster/LegendaryMaster.cfg` for two-player co-op play: relaxed task timer to 180 minutes (with +20 min kill extension), set required kills to a flat 1 kill per task (`BaseMinKills=1`, `BaseMaxKills=1`, `KillsPerTier=0`), increased stat cap scroll chance to 5% (high tier 2%), and broadened creature pool with 20 duo-accessible dungeon encounters alongside apex bosses.
 
 ### Fixed
+- Resolved compiler warning CS0108 in `LootFilterGump.cs` by renaming static array `Entries` to `FilterEntries` to prevent shadowing the inherited base `Gump.Entries` property.
 - Fixed premature gump closures and setting corruption in `[LootFilter` (`LootFilterGump.cs`) caused by button ID calculations using raw bit flag enum values (`AosAttribute`, `AosWeaponAttribute`, `SAAbsorptionAttribute`). Replaced arithmetic button ID encoding with a typed index-mapped entry architecture supporting safe toggle buttons, increment/decrement adjustment arrows, direct text entry inputs, and an explicit Apply button.
 
 ### Removed

@@ -310,7 +310,7 @@ namespace Server.Engines.LootFilter
             }
         }
 
-        private static readonly FilterEntry[] Entries = new FilterEntry[]
+        private static readonly FilterEntry[] FilterEntries = new FilterEntry[]
         {
             // Primary (11)
             new AosAttributeEntry("Strength", LootFilterCategory.Primary, AosAttribute.BonusStr),
@@ -503,9 +503,9 @@ namespace Server.Engines.LootFilter
             int y = 105;
             m_RowIndex = 0;
 
-            for (int i = 0; i < Entries.Length; i++)
+            for (int i = 0; i < FilterEntries.Length; i++)
             {
-                var entry = Entries[i];
+                var entry = FilterEntries[i];
                 if (entry.Category != cat)
                     continue;
 
@@ -589,28 +589,28 @@ namespace Server.Engines.LootFilter
             }
 
             // Toggles
-            if (id >= 1000 && id < 1000 + Entries.Length)
+            if (id >= 1000 && id < 1000 + FilterEntries.Length)
             {
                 int index = id - 1000;
-                Entries[index].Toggle(m_Attachment.Settings);
+                FilterEntries[index].Toggle(m_Attachment.Settings);
                 m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
                 return;
             }
 
             // Increments
-            if (id >= 2000 && id < 2000 + Entries.Length)
+            if (id >= 2000 && id < 2000 + FilterEntries.Length)
             {
                 int index = id - 2000;
-                Entries[index].Adjust(m_Attachment.Settings, 1);
+                FilterEntries[index].Adjust(m_Attachment.Settings, 1);
                 m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
                 return;
             }
 
             // Decrements
-            if (id >= 3000 && id < 3000 + Entries.Length)
+            if (id >= 3000 && id < 3000 + FilterEntries.Length)
             {
                 int index = id - 3000;
-                Entries[index].Adjust(m_Attachment.Settings, -1);
+                FilterEntries[index].Adjust(m_Attachment.Settings, -1);
                 m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
                 return;
             }
@@ -624,9 +624,9 @@ namespace Server.Engines.LootFilter
             if (info == null || m_Attachment == null || m_Attachment.Settings == null)
                 return;
 
-            for (int i = 0; i < Entries.Length; i++)
+            for (int i = 0; i < FilterEntries.Length; i++)
             {
-                if (Entries[i].Category != m_Category)
+                if (FilterEntries[i].Category != m_Category)
                     continue;
 
                 TextRelay relay = info.GetTextEntry(i + 1);
@@ -634,7 +634,7 @@ namespace Server.Engines.LootFilter
                 {
                     if (int.TryParse(relay.Text.Trim(), out int parsedVal))
                     {
-                        Entries[i].SetValue(m_Attachment.Settings, parsedVal);
+                        FilterEntries[i].SetValue(m_Attachment.Settings, parsedVal);
                     }
                 }
             }

@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Server;
 using Server.Gumps;
 using Server.Items;
@@ -23,6 +22,7 @@ namespace Server.Engines.LootFilter
         private PlayerMobile m_Player;
         private LootFilterAttachment m_Attachment;
         private LootFilterCategory m_Category;
+        private int m_RowIndex;
 
         public static void Initialize()
         {
@@ -41,12 +41,373 @@ namespace Server.Engines.LootFilter
             }
         }
 
-        private int m_RowIndex;
+        #region Filter Entry Definitions
+        private abstract class FilterEntry
+        {
+            public string Name { get; }
+            public LootFilterCategory Category { get; }
+
+            protected FilterEntry(string name, LootFilterCategory category)
+            {
+                Name = name;
+                Category = category;
+            }
+
+            public abstract bool IsEnabled(LootFilterSettings s);
+            public abstract void Toggle(LootFilterSettings s);
+            public abstract int GetValue(LootFilterSettings s);
+            public abstract void SetValue(LootFilterSettings s, int val);
+
+            public void Adjust(LootFilterSettings s, int delta)
+            {
+                SetValue(s, Math.Max(0, GetValue(s) + delta));
+            }
+        }
+
+        private class AosAttributeEntry : FilterEntry
+        {
+            public AosAttribute Attribute { get; }
+
+            public AosAttributeEntry(string name, LootFilterCategory category, AosAttribute attr)
+                : base(name, category)
+            {
+                Attribute = attr;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledAttributes.Contains(Attribute);
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (s.EnabledAttributes.Contains(Attribute))
+                    s.EnabledAttributes.Remove(Attribute);
+                else
+                    s.EnabledAttributes.Add(Attribute);
+            }
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                s.Attributes.TryGetValue(Attribute, out int v);
+                return v;
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                s.Attributes[Attribute] = Math.Max(0, val);
+            }
+        }
+
+        private class WeaponAttributeEntry : FilterEntry
+        {
+            public AosWeaponAttribute Attribute { get; }
+
+            public WeaponAttributeEntry(string name, LootFilterCategory category, AosWeaponAttribute attr)
+                : base(name, category)
+            {
+                Attribute = attr;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledWeaponAttributes.Contains(Attribute);
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (s.EnabledWeaponAttributes.Contains(Attribute))
+                    s.EnabledWeaponAttributes.Remove(Attribute);
+                else
+                    s.EnabledWeaponAttributes.Add(Attribute);
+            }
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                s.WeaponAttributes.TryGetValue(Attribute, out int v);
+                return v;
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                s.WeaponAttributes[Attribute] = Math.Max(0, val);
+            }
+        }
+
+        private class ArmorAttributeEntry : FilterEntry
+        {
+            public AosArmorAttribute Attribute { get; }
+
+            public ArmorAttributeEntry(string name, LootFilterCategory category, AosArmorAttribute attr)
+                : base(name, category)
+            {
+                Attribute = attr;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledArmorAttributes.Contains(Attribute);
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (s.EnabledArmorAttributes.Contains(Attribute))
+                    s.EnabledArmorAttributes.Remove(Attribute);
+                else
+                    s.EnabledArmorAttributes.Add(Attribute);
+            }
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                s.ArmorAttributes.TryGetValue(Attribute, out int v);
+                return v;
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                s.ArmorAttributes[Attribute] = Math.Max(0, val);
+            }
+        }
+
+        private class ExtWeaponAttributeEntry : FilterEntry
+        {
+            public ExtendedWeaponAttribute Attribute { get; }
+
+            public ExtWeaponAttributeEntry(string name, LootFilterCategory category, ExtendedWeaponAttribute attr)
+                : base(name, category)
+            {
+                Attribute = attr;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledExtendedWeaponAttributes.Contains(Attribute);
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (s.EnabledExtendedWeaponAttributes.Contains(Attribute))
+                    s.EnabledExtendedWeaponAttributes.Remove(Attribute);
+                else
+                    s.EnabledExtendedWeaponAttributes.Add(Attribute);
+            }
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                s.ExtendedWeaponAttributes.TryGetValue(Attribute, out int v);
+                return v;
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                s.ExtendedWeaponAttributes[Attribute] = Math.Max(0, val);
+            }
+        }
+
+        private class AbsorptionAttributeEntry : FilterEntry
+        {
+            public SAAbsorptionAttribute Attribute { get; }
+
+            public AbsorptionAttributeEntry(string name, LootFilterCategory category, SAAbsorptionAttribute attr)
+                : base(name, category)
+            {
+                Attribute = attr;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledAbsorptionAttributes.Contains(Attribute);
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (s.EnabledAbsorptionAttributes.Contains(Attribute))
+                    s.EnabledAbsorptionAttributes.Remove(Attribute);
+                else
+                    s.EnabledAbsorptionAttributes.Add(Attribute);
+            }
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                s.AbsorptionAttributes.TryGetValue(Attribute, out int v);
+                return v;
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                s.AbsorptionAttributes[Attribute] = Math.Max(0, val);
+            }
+        }
+
+        private class ResistEntry : FilterEntry
+        {
+            public int ResistIndex { get; }
+
+            public ResistEntry(string name, int resistIndex)
+                : base(name, LootFilterCategory.Resists)
+            {
+                ResistIndex = resistIndex;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledResistances[ResistIndex];
+
+            public override void Toggle(LootFilterSettings s) => s.EnabledResistances[ResistIndex] = !s.EnabledResistances[ResistIndex];
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                switch (ResistIndex)
+                {
+                    case 0: return s.MinResistPhysical;
+                    case 1: return s.MinResistFire;
+                    case 2: return s.MinResistCold;
+                    case 3: return s.MinResistPoison;
+                    case 4: return s.MinResistEnergy;
+                    default: return 0;
+                }
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                val = Math.Max(0, val);
+                switch (ResistIndex)
+                {
+                    case 0: s.MinResistPhysical = val; break;
+                    case 1: s.MinResistFire = val; break;
+                    case 2: s.MinResistCold = val; break;
+                    case 3: s.MinResistPoison = val; break;
+                    case 4: s.MinResistEnergy = val; break;
+                }
+            }
+        }
+
+        private class DamageEntry : FilterEntry
+        {
+            public int DamageIndex { get; }
+
+            public DamageEntry(string name, int damageIndex)
+                : base(name, LootFilterCategory.Damage)
+            {
+                DamageIndex = damageIndex;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s) => s.EnabledDamages[DamageIndex];
+
+            public override void Toggle(LootFilterSettings s) => s.EnabledDamages[DamageIndex] = !s.EnabledDamages[DamageIndex];
+
+            public override int GetValue(LootFilterSettings s)
+            {
+                switch (DamageIndex)
+                {
+                    case 0: return s.MinDamagePhysical;
+                    case 1: return s.MinDamageFire;
+                    case 2: return s.MinDamageCold;
+                    case 3: return s.MinDamagePoison;
+                    case 4: return s.MinDamageEnergy;
+                    case 5: return s.MinDamageChaos;
+                    case 6: return s.MinDamageDirect;
+                    default: return 0;
+                }
+            }
+
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                val = Math.Max(0, val);
+                switch (DamageIndex)
+                {
+                    case 0: s.MinDamagePhysical = val; break;
+                    case 1: s.MinDamageFire = val; break;
+                    case 2: s.MinDamageCold = val; break;
+                    case 3: s.MinDamagePoison = val; break;
+                    case 4: s.MinDamageEnergy = val; break;
+                    case 5: s.MinDamageChaos = val; break;
+                    case 6: s.MinDamageDirect = val; break;
+                }
+            }
+        }
+
+        private static readonly FilterEntry[] Entries = new FilterEntry[]
+        {
+            // Primary (11)
+            new AosAttributeEntry("Strength", LootFilterCategory.Primary, AosAttribute.BonusStr),
+            new AosAttributeEntry("Dexterity", LootFilterCategory.Primary, AosAttribute.BonusDex),
+            new AosAttributeEntry("Intelligence", LootFilterCategory.Primary, AosAttribute.BonusInt),
+            new AosAttributeEntry("Hit Points", LootFilterCategory.Primary, AosAttribute.BonusHits),
+            new AosAttributeEntry("Stamina", LootFilterCategory.Primary, AosAttribute.BonusStam),
+            new AosAttributeEntry("Mana", LootFilterCategory.Primary, AosAttribute.BonusMana),
+            new AosAttributeEntry("Hit Point Regeneration", LootFilterCategory.Primary, AosAttribute.RegenHits),
+            new AosAttributeEntry("Stamina Regeneration", LootFilterCategory.Primary, AosAttribute.RegenStam),
+            new AosAttributeEntry("Mana Regeneration", LootFilterCategory.Primary, AosAttribute.RegenMana),
+            new AosAttributeEntry("Luck", LootFilterCategory.Primary, AosAttribute.Luck),
+            new AosAttributeEntry("Night Sight", LootFilterCategory.Primary, AosAttribute.NightSight),
+
+            // Combat (11)
+            new AosAttributeEntry("Hit Chance Increase", LootFilterCategory.Combat, AosAttribute.AttackChance),
+            new AosAttributeEntry("Defense Chance Increase", LootFilterCategory.Combat, AosAttribute.DefendChance),
+            new AosAttributeEntry("Damage Increase", LootFilterCategory.Combat, AosAttribute.WeaponDamage),
+            new AosAttributeEntry("Swing Speed Increase", LootFilterCategory.Combat, AosAttribute.WeaponSpeed),
+            new AosAttributeEntry("Reflect Physical Damage", LootFilterCategory.Combat, AosAttribute.ReflectPhysical),
+            new WeaponAttributeEntry("Battle Lust", LootFilterCategory.Combat, AosWeaponAttribute.BattleLust),
+            new AbsorptionAttributeEntry("Resonance: Fire", LootFilterCategory.Combat, SAAbsorptionAttribute.ResonanceFire),
+            new AbsorptionAttributeEntry("Resonance: Cold", LootFilterCategory.Combat, SAAbsorptionAttribute.ResonanceCold),
+            new AbsorptionAttributeEntry("Resonance: Poison", LootFilterCategory.Combat, SAAbsorptionAttribute.ResonancePoison),
+            new AbsorptionAttributeEntry("Resonance: Energy", LootFilterCategory.Combat, SAAbsorptionAttribute.ResonanceEnergy),
+            new AbsorptionAttributeEntry("Resonance: Kinetic", LootFilterCategory.Combat, SAAbsorptionAttribute.ResonanceKinetic),
+
+            // Magic (9)
+            new AosAttributeEntry("Spell Damage Increase", LootFilterCategory.Magic, AosAttribute.SpellDamage),
+            new AosAttributeEntry("Faster Casting", LootFilterCategory.Magic, AosAttribute.CastSpeed),
+            new AosAttributeEntry("Faster Cast Recovery", LootFilterCategory.Magic, AosAttribute.CastRecovery),
+            new AosAttributeEntry("Lower Mana Cost", LootFilterCategory.Magic, AosAttribute.LowerManaCost),
+            new AosAttributeEntry("Lower Reagent Cost", LootFilterCategory.Magic, AosAttribute.LowerRegCost),
+            new AosAttributeEntry("Spell Channeling", LootFilterCategory.Magic, AosAttribute.SpellChanneling),
+            new AbsorptionAttributeEntry("Casting Focus", LootFilterCategory.Magic, SAAbsorptionAttribute.CastingFocus),
+            new ArmorAttributeEntry("Soul Charge", LootFilterCategory.Magic, AosArmorAttribute.SoulCharge),
+            new AosAttributeEntry("Enhance Potions", LootFilterCategory.Magic, AosAttribute.EnhancePotions),
+
+            // Resists (5)
+            new ResistEntry("Physical Resistance", 0),
+            new ResistEntry("Fire Resistance", 1),
+            new ResistEntry("Cold Resistance", 2),
+            new ResistEntry("Poison Resistance", 3),
+            new ResistEntry("Energy Resistance", 4),
+
+            // Damage (7)
+            new DamageEntry("Physical Damage %", 0),
+            new DamageEntry("Fire Damage %", 1),
+            new DamageEntry("Cold Damage %", 2),
+            new DamageEntry("Poison Damage %", 3),
+            new DamageEntry("Energy Damage %", 4),
+            new DamageEntry("Chaos Damage %", 5),
+            new DamageEntry("Direct Damage %", 6),
+
+            // HitsLeech (7)
+            new WeaponAttributeEntry("Hit Life Leech", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitLeechHits),
+            new WeaponAttributeEntry("Hit Stamina Leech", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitLeechStam),
+            new WeaponAttributeEntry("Hit Mana Leech", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitLeechMana),
+            new WeaponAttributeEntry("Hit Lower Attack", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitLowerAttack),
+            new WeaponAttributeEntry("Hit Lower Defense", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitLowerDefend),
+            new WeaponAttributeEntry("Hit Mana Drain", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitManaDrain),
+            new WeaponAttributeEntry("Hit Fatigue", LootFilterCategory.HitsLeech, AosWeaponAttribute.HitFatigue),
+
+            // HitsMagic (10)
+            new WeaponAttributeEntry("Hit Magic Arrow", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitMagicArrow),
+            new WeaponAttributeEntry("Hit Harm", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitHarm),
+            new WeaponAttributeEntry("Hit Fireball", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitFireball),
+            new WeaponAttributeEntry("Hit Lightning", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitLightning),
+            new WeaponAttributeEntry("Hit Curse", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitCurse),
+            new WeaponAttributeEntry("Hit Physical Area", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitPhysicalArea),
+            new WeaponAttributeEntry("Hit Fire Area", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitFireArea),
+            new WeaponAttributeEntry("Hit Cold Area", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitColdArea),
+            new WeaponAttributeEntry("Hit Poison Area", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitPoisonArea),
+            new WeaponAttributeEntry("Hit Energy Area", LootFilterCategory.HitsMagic, AosWeaponAttribute.HitEnergyArea),
+
+            // Special (10)
+            new WeaponAttributeEntry("Self Repair", LootFilterCategory.Special, AosWeaponAttribute.SelfRepair),
+            new WeaponAttributeEntry("Splintering Weapon", LootFilterCategory.Special, AosWeaponAttribute.SplinteringWeapon),
+            new WeaponAttributeEntry("Blood Drinker", LootFilterCategory.Special, AosWeaponAttribute.BloodDrinker),
+            new ExtWeaponAttributeEntry("Bane", LootFilterCategory.Special, ExtendedWeaponAttribute.Bane),
+            new AbsorptionAttributeEntry("Damage Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterDamage),
+            new AbsorptionAttributeEntry("Fire Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterFire),
+            new AbsorptionAttributeEntry("Cold Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterCold),
+            new AbsorptionAttributeEntry("Poison Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterPoison),
+            new AbsorptionAttributeEntry("Energy Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterEnergy),
+            new AbsorptionAttributeEntry("Kinetic Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterKinetic)
+        };
+        #endregion
 
         public LootFilterGump(PlayerMobile pm, LootFilterCategory category = LootFilterCategory.Primary) : base(50, 50)
         {
             m_Player = pm;
             m_Attachment = LootFilterAttachment.GetAttachment(pm);
+            if (m_Attachment != null && m_Attachment.Settings == null)
+            {
+                m_Attachment.Settings = new LootFilterSettings();
+            }
             m_Category = category;
 
             AddPage(0);
@@ -67,7 +428,7 @@ namespace Server.Engines.LootFilter
             AddHtml(405, 25, 45, 20, "<BASEFONT COLOR=#00BFFF>INFO</BASEFONT>", false, false);
 
             // Toggle Filter
-            bool globalEnabled = m_Attachment.Settings.Enabled;
+            bool globalEnabled = m_Attachment != null && m_Attachment.Settings.Enabled;
             AddHtml(460, 25, 70, 20, globalEnabled ? "<BASEFONT COLOR=#00FF00>ENABLED</BASEFONT>" : "<BASEFONT COLOR=#FF0000>DISABLED</BASEFONT>", false, false);
             AddButton(535, 25, globalEnabled ? 2154 : 2151, globalEnabled ? 2154 : 2151, 1, GumpButtonType.Reply, 0);
 
@@ -91,15 +452,25 @@ namespace Server.Engines.LootFilter
 
             // Content Headers
             AddHtml(180, 75, 50, 20, "<BASEFONT COLOR=#FFFFFF>On/Off</BASEFONT>", false, false);
-            AddHtml(235, 75, 200, 20, "<BASEFONT COLOR=#FFFFFF>Property Name</BASEFONT>", false, false);
-            AddHtml(430, 75, 60, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Minimum</CENTER></BASEFONT>", false, false);
-            AddHtml(510, 75, 60, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Adjust</CENTER></BASEFONT>", false, false);
+            AddHtml(215, 75, 200, 20, "<BASEFONT COLOR=#FFFFFF>Property Name</BASEFONT>", false, false);
+            AddHtml(420, 75, 60, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Minimum</CENTER></BASEFONT>", false, false);
+            AddHtml(495, 75, 80, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Adjust</CENTER></BASEFONT>", false, false);
             
             // Header Divider
             AddImageTiled(175, 95, 400, 2, 2624);
             AddAlphaRegion(175, 95, 400, 2);
 
             RenderCategory(m_Category);
+
+            // Bottom Action Area in Right Content Frame
+            AddImageTiled(175, 515, 400, 1, 2624);
+            AddAlphaRegion(175, 515, 400, 1);
+
+            AddHtml(180, 527, 280, 20, "<BASEFONT COLOR=#999999>Type numbers or use arrows</BASEFONT>", false, false);
+
+            // Apply Button
+            AddButton(475, 524, 4005, 4007, 5, GumpButtonType.Reply, 0);
+            AddHtml(510, 526, 60, 20, "<BASEFONT COLOR=#00FF00>Apply</BASEFONT>", false, false);
         }
 
         private void AddCategoryButton(int x, ref int y, string label, LootFilterCategory cat)
@@ -130,194 +501,65 @@ namespace Server.Engines.LootFilter
         private void RenderCategory(LootFilterCategory cat)
         {
             int y = 105;
-            int x = 180;
             m_RowIndex = 0;
-            switch (cat)
+
+            for (int i = 0; i < Entries.Length; i++)
             {
-                case LootFilterCategory.Primary:
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusStr, "Strength");
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusDex, "Dexterity");
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusInt, "Intelligence");
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusHits, "Hit Points");
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusStam, "Stamina");
-                    AddAttributeEntry(x, ref y, AosAttribute.BonusMana, "Mana");
-                    AddAttributeEntry(x, ref y, AosAttribute.RegenHits, "Hit Point Regeneration");
-                    AddAttributeEntry(x, ref y, AosAttribute.RegenStam, "Stamina Regeneration");
-                    AddAttributeEntry(x, ref y, AosAttribute.RegenMana, "Mana Regeneration");
-                    AddAttributeEntry(x, ref y, AosAttribute.Luck, "Luck");
-                    AddAttributeEntry(x, ref y, AosAttribute.NightSight, "Night Sight");
-                    break;
-                case LootFilterCategory.Combat:
-                    AddAttributeEntry(x, ref y, AosAttribute.AttackChance, "Hit Chance Increase");
-                    AddAttributeEntry(x, ref y, AosAttribute.DefendChance, "Defense Chance Increase");
-                    AddAttributeEntry(x, ref y, AosAttribute.WeaponDamage, "Damage Increase");
-                    AddAttributeEntry(x, ref y, AosAttribute.WeaponSpeed, "Swing Speed Increase");
-                    AddAttributeEntry(x, ref y, AosAttribute.ReflectPhysical, "Reflect Physical Damage");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.BattleLust, "Battle Lust");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.ResonanceFire, "Resonance: Fire");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.ResonanceCold, "Resonance: Cold");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.ResonancePoison, "Resonance: Poison");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.ResonanceEnergy, "Resonance: Energy");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.ResonanceKinetic, "Resonance: Kinetic");
-                    break;
-                case LootFilterCategory.Magic:
-                    AddAttributeEntry(x, ref y, AosAttribute.SpellDamage, "Spell Damage Increase");
-                    AddAttributeEntry(x, ref y, AosAttribute.CastSpeed, "Faster Casting");
-                    AddAttributeEntry(x, ref y, AosAttribute.CastRecovery, "Faster Cast Recovery");
-                    AddAttributeEntry(x, ref y, AosAttribute.LowerManaCost, "Lower Mana Cost");
-                    AddAttributeEntry(x, ref y, AosAttribute.LowerRegCost, "Lower Reagent Cost");
-                    AddAttributeEntry(x, ref y, AosAttribute.SpellChanneling, "Spell Channeling");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.CastingFocus, "Casting Focus");
-                    AddArmorAttributeEntry(x, ref y, AosArmorAttribute.SoulCharge, "Soul Charge");
-                    AddAttributeEntry(x, ref y, AosAttribute.EnhancePotions, "Enhance Potions");
-                    break;
-                case LootFilterCategory.Resists:
-                    AddResistEntry(x, ref y, "Physical Resistance", 100);
-                    AddResistEntry(x, ref y, "Fire Resistance", 101);
-                    AddResistEntry(x, ref y, "Cold Resistance", 102);
-                    AddResistEntry(x, ref y, "Poison Resistance", 103);
-                    AddResistEntry(x, ref y, "Energy Resistance", 104);
-                    break;
-                case LootFilterCategory.Damage:
-                    AddDamageEntry(x, ref y, "Physical Damage %", 200);
-                    AddDamageEntry(x, ref y, "Fire Damage %", 201);
-                    AddDamageEntry(x, ref y, "Cold Damage %", 202);
-                    AddDamageEntry(x, ref y, "Poison Damage %", 203);
-                    AddDamageEntry(x, ref y, "Energy Damage %", 204);
-                    AddDamageEntry(x, ref y, "Chaos Damage %", 205);
-                    AddDamageEntry(x, ref y, "Direct Damage %", 206);
-                    break;
-                case LootFilterCategory.HitsLeech:
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLeechHits, "Hit Life Leech");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLeechStam, "Hit Stamina Leech");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLeechMana, "Hit Mana Leech");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLowerAttack, "Hit Lower Attack");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLowerDefend, "Hit Lower Defense");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitManaDrain, "Hit Mana Drain");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitFatigue, "Hit Fatigue");
-                    break;
-                case LootFilterCategory.HitsMagic:
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitMagicArrow, "Hit Magic Arrow");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitHarm, "Hit Harm");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitFireball, "Hit Fireball");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitLightning, "Hit Lightning");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitCurse, "Hit Curse");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitPhysicalArea, "Hit Physical Area");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitFireArea, "Hit Fire Area");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitColdArea, "Hit Cold Area");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitPoisonArea, "Hit Poison Area");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.HitEnergyArea, "Hit Energy Area");
-                    break;
-                case LootFilterCategory.Special:
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.SelfRepair, "Self Repair");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.SplinteringWeapon, "Splintering Weapon");
-                    AddWeaponAttributeEntry(x, ref y, AosWeaponAttribute.BloodDrinker, "Blood Drinker");
-                    AddExtendedWeaponAttributeEntry(x, ref y, ExtendedWeaponAttribute.Bane, "Bane");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterDamage, "Damage Eater");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterFire, "Fire Eater");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterCold, "Cold Eater");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterPoison, "Poison Eater");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterEnergy, "Energy Eater");
-                    AddAbsorptionAttributeEntry(x, ref y, SAAbsorptionAttribute.EaterKinetic, "Kinetic Eater");
-                    break;
+                var entry = Entries[i];
+                if (entry.Category != cat)
+                    continue;
+
+                int val = entry.GetValue(m_Attachment.Settings);
+                bool isEnabled = entry.IsEnabled(m_Attachment.Settings);
+
+                AddEntry(i, entry.Name, val, isEnabled, ref y);
             }
         }
 
-        private void AddAttributeEntry(int x, ref int y, AosAttribute attr, string name)
-        {
-            int val = 0;
-            m_Attachment.Settings.Attributes.TryGetValue(attr, out val);
-            bool isEnabled = m_Attachment.Settings.EnabledAttributes.Contains(attr);
-            AddEntry(x, ref y, name, val, isEnabled, 15000 + (int)attr, 1000 + (int)attr, 2000 + (int)attr);
-        }
-
-        private void AddWeaponAttributeEntry(int x, ref int y, AosWeaponAttribute attr, string name)
-        {
-            int val = 0;
-            m_Attachment.Settings.WeaponAttributes.TryGetValue(attr, out val);
-            bool isEnabled = m_Attachment.Settings.EnabledWeaponAttributes.Contains(attr);
-            AddEntry(x, ref y, name, val, isEnabled, 16000 + (int)attr, 3000 + (int)attr, 4000 + (int)attr);
-        }
-
-        private void AddArmorAttributeEntry(int x, ref int y, AosArmorAttribute attr, string name)
-        {
-            int val = 0;
-            m_Attachment.Settings.ArmorAttributes.TryGetValue(attr, out val);
-            bool isEnabled = m_Attachment.Settings.EnabledArmorAttributes.Contains(attr);
-            AddEntry(x, ref y, name, val, isEnabled, 21000 + (int)attr, 11000 + (int)attr, 12000 + (int)attr);
-        }
-
-        private void AddExtendedWeaponAttributeEntry(int x, ref int y, ExtendedWeaponAttribute attr, string name)
-        {
-            int val = 0;
-            m_Attachment.Settings.ExtendedWeaponAttributes.TryGetValue(attr, out val);
-            bool isEnabled = m_Attachment.Settings.EnabledExtendedWeaponAttributes.Contains(attr);
-            AddEntry(x, ref y, name, val, isEnabled, 19000 + (int)attr, 9000 + (int)attr, 10000 + (int)attr);
-        }
-
-        private void AddAbsorptionAttributeEntry(int x, ref int y, SAAbsorptionAttribute attr, string name)
-        {
-            int val = 0;
-            m_Attachment.Settings.AbsorptionAttributes.TryGetValue(attr, out val);
-            bool isEnabled = m_Attachment.Settings.EnabledAbsorptionAttributes.Contains(attr);
-            AddEntry(x, ref y, name, val, isEnabled, 23000 + (int)attr, 13000 + (int)attr, 14000 + (int)attr);
-        }
-
-        private void AddEntry(int x, ref int y, string name, int val, bool isEnabled, int btnToggle, int btnIncr, int btnDecr)
+        private void AddEntry(int index, string name, int val, bool isEnabled, ref int y)
         {
             m_RowIndex++;
+            int x = 180;
+
             if (m_RowIndex % 2 != 0)
             {
                 AddImageTiled(x - 10, y - 5, 410, 35, 2624);
                 AddAlphaRegion(x - 10, y - 5, 410, 35);
             }
 
-            AddButton(x, y + 2, isEnabled ? 2154 : 2151, isEnabled ? 2154 : 2151, btnToggle, GumpButtonType.Reply, 0);
+            // Toggle On/Off button
+            AddButton(x, y + 2, isEnabled ? 2154 : 2151, isEnabled ? 2154 : 2151, 1000 + index, GumpButtonType.Reply, 0);
             
-            AddHtml(x + 55, y + 2, 200, 20, isEnabled ? $"<BASEFONT COLOR=#FFFFFF>{name}</BASEFONT>" : $"<BASEFONT COLOR=#777777>{name}</BASEFONT>", false, false);
+            // Property Name
+            AddHtml(x + 35, y + 2, 200, 20, isEnabled ? $"<BASEFONT COLOR=#FFFFFF>{name}</BASEFONT>" : $"<BASEFONT COLOR=#777777>{name}</BASEFONT>", false, false);
             
-            AddImageTiled(x + 250, y, 60, 24, 2624);
-            AddAlphaRegion(x + 250, y, 60, 24);
+            // Numeric Input Box
+            AddImageTiled(x + 240, y, 60, 24, 2624);
+            AddAlphaRegion(x + 240, y, 60, 24);
             
-            AddHtml(x + 250, y + 2, 60, 20, $"<BASEFONT COLOR=#FCCA03><CENTER>{val}</CENTER></BASEFONT>", false, false);
+            AddTextEntry(x + 245, y + 2, 50, 20, 0x481, index + 1, val.ToString(), 5);
             
-            AddButton(x + 335, y + 3, 2435, 2436, btnIncr, GumpButtonType.Reply, 0);
-            AddButton(x + 365, y + 3, 2437, 2438, btnDecr, GumpButtonType.Reply, 0);
+            // Adjust buttons: Up / Down
+            AddButton(x + 325, y + 3, 2435, 2436, 2000 + index, GumpButtonType.Reply, 0);
+            AddButton(x + 355, y + 3, 2437, 2438, 3000 + index, GumpButtonType.Reply, 0);
             
             y += 35;
         }
 
-        private void AddResistEntry(int x, ref int y, string name, int id)
-        {
-            int val = 0;
-            if (id == 100) val = m_Attachment.Settings.MinResistPhysical;
-            else if (id == 101) val = m_Attachment.Settings.MinResistFire;
-            else if (id == 102) val = m_Attachment.Settings.MinResistCold;
-            else if (id == 103) val = m_Attachment.Settings.MinResistPoison;
-            else if (id == 104) val = m_Attachment.Settings.MinResistEnergy;
-            
-            bool isEnabled = m_Attachment.Settings.EnabledResistances[id - 100];
-            AddEntry(x, ref y, name, val, isEnabled, 17000 + id, 5000 + id, 6000 + id);
-        }
-
-        private void AddDamageEntry(int x, ref int y, string name, int id)
-        {
-            int val = 0;
-            if (id == 200) val = m_Attachment.Settings.MinDamagePhysical;
-            else if (id == 201) val = m_Attachment.Settings.MinDamageFire;
-            else if (id == 202) val = m_Attachment.Settings.MinDamageCold;
-            else if (id == 203) val = m_Attachment.Settings.MinDamagePoison;
-            else if (id == 204) val = m_Attachment.Settings.MinDamageEnergy;
-            else if (id == 205) val = m_Attachment.Settings.MinDamageChaos;
-            else if (id == 206) val = m_Attachment.Settings.MinDamageDirect;
-
-            bool isEnabled = m_Attachment.Settings.EnabledDamages[id - 200];
-            AddEntry(x, ref y, name, val, isEnabled, 18000 + id, 7000 + id, 8000 + id);
-        }
-
         public override void OnResponse(NetState sender, RelayInfo info)
         {
+            if (m_Player == null || m_Attachment == null || m_Attachment.Settings == null)
+                return;
+
             int id = info.ButtonID;
+
+            // Always save any text entered in the numeric boxes on the current page first
+            SaveTextEntries(info);
+
+            if (id == 0) // Closed / Right Click
+            {
+                return;
+            }
 
             if (id == 1) // Enable/Disable Global
             {
@@ -333,156 +575,69 @@ namespace Server.Engines.LootFilter
                 return;
             }
 
-            if (id >= 10 && id < 20) // Change Category
+            if (id == 5) // Apply Button
+            {
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                return;
+            }
+
+            if (id >= 10 && id < 10 + 8) // Change Category
             {
                 m_Category = (LootFilterCategory)(id - 10);
                 m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
                 return;
             }
 
-            // Increments and Decrements
-            if (id >= 1000 && id < 2000) { HandleAttr(id - 1000, 1); return; }
-            if (id >= 2000 && id < 3000) { HandleAttr(id - 2000, -1); return; }
-            if (id >= 3000 && id < 4000) { HandleWepAttr(id - 3000, 1); return; }
-            if (id >= 4000 && id < 5000) { HandleWepAttr(id - 4000, -1); return; }
-            if (id >= 5100 && id <= 5104) { HandleResist(id - 5000, 1); return; }
-            if (id >= 6100 && id <= 6104) { HandleResist(id - 6000, -1); return; }
-            if (id >= 7200 && id <= 7206) { HandleDam(id - 7000, 1); return; }
-            if (id >= 8200 && id <= 8206) { HandleDam(id - 8000, -1); return; }
-            if (id >= 9000 && id < 10000) { HandleExtWepAttr(id - 9000, 1); return; }
-            if (id >= 10000 && id < 11000) { HandleExtWepAttr(id - 10000, -1); return; }
-            if (id >= 11000 && id < 12000) { HandleArmAttr(id - 11000, 1); return; }
-            if (id >= 12000 && id < 13000) { HandleArmAttr(id - 12000, -1); return; }
-            if (id >= 13000 && id < 14000) { HandleAbsorpAttr(id - 13000, 1); return; }
-            if (id >= 14000 && id < 15000) { HandleAbsorpAttr(id - 14000, -1); return; }
-
             // Toggles
-            if (id >= 15000 && id < 16000) { ToggleAttr(id - 15000); return; }
-            if (id >= 16000 && id < 17000) { ToggleWepAttr(id - 16000); return; }
-            if (id >= 17100 && id <= 17104) { ToggleResist(id - 17000); return; }
-            if (id >= 18200 && id <= 18206) { ToggleDam(id - 18000); return; }
-            if (id >= 19000 && id < 20000) { ToggleExtWepAttr(id - 19000); return; }
-            if (id >= 21000 && id < 22000) { ToggleArmAttr(id - 21000); return; }
-            if (id >= 23000 && id < 24000) { ToggleAbsorpAttr(id - 23000); return; }
-        }
+            if (id >= 1000 && id < 1000 + Entries.Length)
+            {
+                int index = id - 1000;
+                Entries[index].Toggle(m_Attachment.Settings);
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                return;
+            }
 
-        private void ToggleAttr(int attrId)
-        {
-            var attr = (AosAttribute)attrId;
-            if (m_Attachment.Settings.EnabledAttributes.Contains(attr)) m_Attachment.Settings.EnabledAttributes.Remove(attr);
-            else m_Attachment.Settings.EnabledAttributes.Add(attr);
+            // Increments
+            if (id >= 2000 && id < 2000 + Entries.Length)
+            {
+                int index = id - 2000;
+                Entries[index].Adjust(m_Attachment.Settings, 1);
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                return;
+            }
+
+            // Decrements
+            if (id >= 3000 && id < 3000 + Entries.Length)
+            {
+                int index = id - 3000;
+                Entries[index].Adjust(m_Attachment.Settings, -1);
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                return;
+            }
+
+            // Fallback: refresh gump rather than silently closing
             m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
         }
 
-        private void ToggleWepAttr(int attrId)
+        private void SaveTextEntries(RelayInfo info)
         {
-            var attr = (AosWeaponAttribute)attrId;
-            if (m_Attachment.Settings.EnabledWeaponAttributes.Contains(attr)) m_Attachment.Settings.EnabledWeaponAttributes.Remove(attr);
-            else m_Attachment.Settings.EnabledWeaponAttributes.Add(attr);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
+            if (info == null || m_Attachment == null || m_Attachment.Settings == null)
+                return;
 
-        private void ToggleArmAttr(int attrId)
-        {
-            var attr = (AosArmorAttribute)attrId;
-            if (m_Attachment.Settings.EnabledArmorAttributes.Contains(attr)) m_Attachment.Settings.EnabledArmorAttributes.Remove(attr);
-            else m_Attachment.Settings.EnabledArmorAttributes.Add(attr);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
+            for (int i = 0; i < Entries.Length; i++)
+            {
+                if (Entries[i].Category != m_Category)
+                    continue;
 
-        private void ToggleExtWepAttr(int attrId)
-        {
-            var attr = (ExtendedWeaponAttribute)attrId;
-            if (m_Attachment.Settings.EnabledExtendedWeaponAttributes.Contains(attr)) m_Attachment.Settings.EnabledExtendedWeaponAttributes.Remove(attr);
-            else m_Attachment.Settings.EnabledExtendedWeaponAttributes.Add(attr);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void ToggleAbsorpAttr(int attrId)
-        {
-            var attr = (SAAbsorptionAttribute)attrId;
-            if (m_Attachment.Settings.EnabledAbsorptionAttributes.Contains(attr)) m_Attachment.Settings.EnabledAbsorptionAttributes.Remove(attr);
-            else m_Attachment.Settings.EnabledAbsorptionAttributes.Add(attr);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void ToggleResist(int id)
-        {
-            m_Attachment.Settings.EnabledResistances[id - 100] = !m_Attachment.Settings.EnabledResistances[id - 100];
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void ToggleDam(int id)
-        {
-            m_Attachment.Settings.EnabledDamages[id - 200] = !m_Attachment.Settings.EnabledDamages[id - 200];
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleAttr(int attrId, int delta)
-        {
-            AosAttribute attr = (AosAttribute)attrId;
-            int val = 0;
-            m_Attachment.Settings.Attributes.TryGetValue(attr, out val);
-            m_Attachment.Settings.Attributes[attr] = Math.Max(0, val + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleWepAttr(int attrId, int delta)
-        {
-            AosWeaponAttribute attr = (AosWeaponAttribute)attrId;
-            int val = 0;
-            m_Attachment.Settings.WeaponAttributes.TryGetValue(attr, out val);
-            m_Attachment.Settings.WeaponAttributes[attr] = Math.Max(0, val + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleArmAttr(int attrId, int delta)
-        {
-            AosArmorAttribute attr = (AosArmorAttribute)attrId;
-            int val = 0;
-            m_Attachment.Settings.ArmorAttributes.TryGetValue(attr, out val);
-            m_Attachment.Settings.ArmorAttributes[attr] = Math.Max(0, val + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleExtWepAttr(int attrId, int delta)
-        {
-            ExtendedWeaponAttribute attr = (ExtendedWeaponAttribute)attrId;
-            int val = 0;
-            m_Attachment.Settings.ExtendedWeaponAttributes.TryGetValue(attr, out val);
-            m_Attachment.Settings.ExtendedWeaponAttributes[attr] = Math.Max(0, val + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleAbsorpAttr(int attrId, int delta)
-        {
-            SAAbsorptionAttribute attr = (SAAbsorptionAttribute)attrId;
-            int val = 0;
-            m_Attachment.Settings.AbsorptionAttributes.TryGetValue(attr, out val);
-            m_Attachment.Settings.AbsorptionAttributes[attr] = Math.Max(0, val + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleResist(int id, int delta)
-        {
-            if (id == 100) m_Attachment.Settings.MinResistPhysical = Math.Max(0, m_Attachment.Settings.MinResistPhysical + delta);
-            else if (id == 101) m_Attachment.Settings.MinResistFire = Math.Max(0, m_Attachment.Settings.MinResistFire + delta);
-            else if (id == 102) m_Attachment.Settings.MinResistCold = Math.Max(0, m_Attachment.Settings.MinResistCold + delta);
-            else if (id == 103) m_Attachment.Settings.MinResistPoison = Math.Max(0, m_Attachment.Settings.MinResistPoison + delta);
-            else if (id == 104) m_Attachment.Settings.MinResistEnergy = Math.Max(0, m_Attachment.Settings.MinResistEnergy + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
-        }
-
-        private void HandleDam(int id, int delta)
-        {
-            if (id == 200) m_Attachment.Settings.MinDamagePhysical = Math.Max(0, m_Attachment.Settings.MinDamagePhysical + delta);
-            else if (id == 201) m_Attachment.Settings.MinDamageFire = Math.Max(0, m_Attachment.Settings.MinDamageFire + delta);
-            else if (id == 202) m_Attachment.Settings.MinDamageCold = Math.Max(0, m_Attachment.Settings.MinDamageCold + delta);
-            else if (id == 203) m_Attachment.Settings.MinDamagePoison = Math.Max(0, m_Attachment.Settings.MinDamagePoison + delta);
-            else if (id == 204) m_Attachment.Settings.MinDamageEnergy = Math.Max(0, m_Attachment.Settings.MinDamageEnergy + delta);
-            else if (id == 205) m_Attachment.Settings.MinDamageChaos = Math.Max(0, m_Attachment.Settings.MinDamageChaos + delta);
-            else if (id == 206) m_Attachment.Settings.MinDamageDirect = Math.Max(0, m_Attachment.Settings.MinDamageDirect + delta);
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                TextRelay relay = info.GetTextEntry(i + 1);
+                if (relay != null && !string.IsNullOrWhiteSpace(relay.Text))
+                {
+                    if (int.TryParse(relay.Text.Trim(), out int parsedVal))
+                    {
+                        Entries[i].SetValue(m_Attachment.Settings, parsedVal);
+                    }
+                }
+            }
         }
     }
 }

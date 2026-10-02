@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Fixed premature gump closures and setting corruption in `[LootFilter` (`LootFilterGump.cs`) caused by button ID calculations using raw bit flag enum values (`AosAttribute`, `AosWeaponAttribute`, `SAAbsorptionAttribute`). Replaced arithmetic button ID encoding with a typed index-mapped entry architecture supporting safe toggle buttons, increment/decrement adjustment arrows, direct text entry inputs, and an explicit Apply button.
+
 ## [1.0.0] - 2026-09-30
 
 ### Added

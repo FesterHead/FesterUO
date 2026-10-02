@@ -206,8 +206,8 @@ namespace Server.Custom
             new BookPageInfo(
                 "PLAYER COMMANDS 2",
                 "-------------------",
-                "[tillerman",
-                "  Ship helm controls.",
+                "[say",
+                "  House & boat gump.",
                 "",
                 "[GetSanctuary",
                 "  Claims your talisman.",

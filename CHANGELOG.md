@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added `SlowSkillGrind.cs` in `custom-scripts/FesterUO/` and configuration in `Config/FesterUO/SlowSkillGrind.cfg` allowing skills to advance past 100.0 without PowerScrolls over progressive hour-paced intervals (Tier 1 [100-105]: 6h; Tier 2 [105-110]: 12h; Tier 3 [110-115]: 18h; Tier 4 [115-120]: 24h) with persistence in `Saves/SlowSkillGrind/Persistence.bin` and player status commands `[SlowGrind` / `[SlowGrindInfo`.
 
 ### Changed
+- Renamed and transformed `TillermanGump.cs` into `SayGump.cs` (`[say`, `[tillerman`, `[house`, `[boat`), creating a universal quick-speech gump accessible anywhere without vessel boarding restrictions. Reduced gump dimensions by ~51% (155x185 vs 260x225), removed the close footer text, and added a dedicated House management section supporting "Lock Down", "Secure", "Release", "Unsecure", "Trash Barrel", "Ban", and "Eject" with native speech keyword triggers.
 - Tuned `LegendaryMaster` configuration in `Config/LegendaryMaster/LegendaryMaster.cfg` for two-player co-op play: relaxed task timer to 180 minutes (with +20 min kill extension), set required kills to a flat 1 kill per task (`BaseMinKills=1`, `BaseMaxKills=1`, `KillsPerTier=0`), increased stat cap scroll chance to 5% (high tier 2%), and broadened creature pool with 20 duo-accessible dungeon encounters alongside apex bosses.
 
 ### Fixed

@@ -137,7 +137,7 @@ namespace Server.Custom
             if (!IsGatheredResource(item))
             {
                 if (message)
-                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources and recall runes.");
+                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources, blank maps, and recall runes.");
 
                 return false;
             }
@@ -160,6 +160,8 @@ namespace Server.Custom
                 return false;
 
             return item is RecallRune ||
+                   item is BlankMap ||
+                   item is BlankScroll ||
                    item is ICommodity ||
                    item is IGem ||
                    item is BaseIngot ||
@@ -234,7 +236,7 @@ namespace Server.Custom
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt(); // version
             WeightReduction = reader.ReadInt();
 
             Weight = 0.0;

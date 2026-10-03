@@ -32,8 +32,8 @@ namespace Server.Custom
                 "Holds 1,000 items with",
                 "100% weight reduction.",
                 "",
-                "Accepts raw resources",
-                "and recall runes.",
+                "Accepts raw resources,",
+                "blank maps, & runes.",
                 "",
                 "Keep it in your pack!"),
             new BookPageInfo(

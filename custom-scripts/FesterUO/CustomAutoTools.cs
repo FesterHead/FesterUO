@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using Server;
 using Server.Engines.Harvest;
@@ -22,6 +23,9 @@ namespace Server.Custom
         public static void Initialize()
         {
             EventSink.ResourceHarvestSuccess += OnResourceHarvestSuccess;
+            EventSink.WorldSave += FestersFishingPole.OnSave;
+            EventSink.WorldLoad += FestersFishingPole.OnLoad;
+            CommandSystem.Register("ff", AccessLevel.Player, OnFishFilterCommand);
             CommandSystem.Register("FishFilter", AccessLevel.Player, OnFishFilterCommand);
             CommandSystem.Register("FilletFilter", AccessLevel.Player, OnFishFilterCommand);
         }
@@ -222,22 +226,42 @@ namespace Server.Custom
     // =========================================================================
     // 3. FESTER'S FISHING POLE (Auto-Fillet Steaks & Trash Purge to Satchel)
     // =========================================================================
+    public class FishFilterSettings
+    {
+        public bool AutoProtectQuestFish { get; set; } = true;
+        public HashSet<string> ProtectedFish { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
     public class FestersFishingPole : FishingPole
     {
-        private bool m_AutoProtectQuestFish = true;
-        private HashSet<string> m_ProtectedFish = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly string PersistencePath = Path.Combine("Saves", "FesterUO", "FishFilter.bin");
+        private static Dictionary<Serial, FishFilterSettings> m_Registry = new Dictionary<Serial, FishFilterSettings>();
+
+        public static FishFilterSettings GetSettings(FestersFishingPole pole)
+        {
+            if (pole == null)
+                return new FishFilterSettings();
+
+            if (!m_Registry.TryGetValue(pole.Serial, out FishFilterSettings settings))
+            {
+                settings = new FishFilterSettings();
+                m_Registry[pole.Serial] = settings;
+            }
+
+            return settings;
+        }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool AutoProtectQuestFish
         {
-            get => m_AutoProtectQuestFish;
-            set => m_AutoProtectQuestFish = value;
+            get => GetSettings(this).AutoProtectQuestFish;
+            set => GetSettings(this).AutoProtectQuestFish = value;
         }
 
         public HashSet<string> ProtectedFish
         {
-            get => m_ProtectedFish;
-            set => m_ProtectedFish = value ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            get => GetSettings(this).ProtectedFish;
+            set => GetSettings(this).ProtectedFish = value ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         [Constructable]
@@ -254,25 +278,15 @@ namespace Server.Custom
         {
             base.OnSingleClick(from);
 
-            int count = m_ProtectedFish != null ? m_ProtectedFish.Count : 0;
-            if (m_AutoProtectQuestFish && count > 0)
+            int count = ProtectedFish != null ? ProtectedFish.Count : 0;
+            if (AutoProtectQuestFish && count > 0)
                 LabelTo(from, $"[Auto-Fillet: Quest Protected + {count} Exempt]", 68);
-            else if (m_AutoProtectQuestFish)
+            else if (AutoProtectQuestFish)
                 LabelTo(from, "[Auto-Fillet: Quest Protected]", 68);
             else if (count > 0)
                 LabelTo(from, $"[Auto-Fillet: {count} Exempt]", 68);
             else
                 LabelTo(from, "[Indestructible & Auto-Fillet]", 68);
-        }
-
-        public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
-        {
-            base.GetContextMenuEntries(from, list);
-
-            if (from.Alive && (IsChildOf(from.Backpack) || Parent == from))
-            {
-                list.Add(new ConfigureFishFilterEntry(this, from));
-            }
         }
 
         public override void OnDoubleClick(Mobile from)
@@ -347,10 +361,10 @@ namespace Server.Custom
 
             Type t = item.GetType();
 
-            if (m_AutoProtectQuestFish && IsQuestFish(from, t))
+            if (AutoProtectQuestFish && IsQuestFish(from, t))
                 return true;
 
-            if (m_ProtectedFish != null && (m_ProtectedFish.Contains(t.Name) || m_ProtectedFish.Contains(t.FullName)))
+            if (ProtectedFish != null && (ProtectedFish.Contains(t.Name) || ProtectedFish.Contains(t.FullName)))
                 return true;
 
             return false;
@@ -400,49 +414,62 @@ namespace Server.Custom
         }
 
         public FestersFishingPole(Serial serial) : base(serial) { }
+        public override void Serialize(GenericWriter writer) => base.Serialize(writer);
+        public override void Deserialize(GenericReader reader) => base.Deserialize(reader);
 
-        public override void Serialize(GenericWriter writer)
+        public static void OnSave(WorldSaveEventArgs e)
         {
-            base.Serialize(writer);
-            writer.Write(1); // version
-
-            writer.Write(m_AutoProtectQuestFish);
-            writer.Write(m_ProtectedFish != null ? m_ProtectedFish.Count : 0);
-            if (m_ProtectedFish != null)
-            {
-                foreach (string fish in m_ProtectedFish)
+            Persistence.Serialize(
+                PersistencePath,
+                writer =>
                 {
-                    writer.Write(fish);
-                }
-            }
+                    writer.Write(0); // version
+
+                    writer.Write(m_Registry.Count);
+                    foreach (KeyValuePair<Serial, FishFilterSettings> kvp in m_Registry)
+                    {
+                        writer.Write((int)kvp.Key);
+                        writer.Write(kvp.Value.AutoProtectQuestFish);
+                        writer.Write(kvp.Value.ProtectedFish.Count);
+                        foreach (string fish in kvp.Value.ProtectedFish)
+                        {
+                            writer.Write(fish);
+                        }
+                    }
+                });
         }
 
-        public override void Deserialize(GenericReader reader)
+        public static void OnLoad()
         {
-            base.Deserialize(reader);
-
-            m_ProtectedFish = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            m_AutoProtectQuestFish = true;
-
-            if (reader.End())
-                return; // Legacy version 0
-
-            int version = reader.ReadInt();
-            switch (version)
-            {
-                case 1:
+            Persistence.Deserialize(
+                PersistencePath,
+                reader =>
                 {
-                    m_AutoProtectQuestFish = reader.ReadBool();
+                    int version = reader.ReadInt();
                     int count = reader.ReadInt();
+
+                    m_Registry = new Dictionary<Serial, FishFilterSettings>(count);
+
                     for (int i = 0; i < count; i++)
                     {
-                        string s = reader.ReadString();
-                        if (!string.IsNullOrEmpty(s))
-                            m_ProtectedFish.Add(s);
+                        Serial serial = reader.ReadInt();
+                        bool autoProtect = reader.ReadBool();
+                        int fishCount = reader.ReadInt();
+                        HashSet<string> protectedFish = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        for (int j = 0; j < fishCount; j++)
+                        {
+                            string fish = reader.ReadString();
+                            if (!string.IsNullOrEmpty(fish))
+                                protectedFish.Add(fish);
+                        }
+
+                        m_Registry[serial] = new FishFilterSettings
+                        {
+                            AutoProtectQuestFish = autoProtect,
+                            ProtectedFish = protectedFish
+                        };
                     }
-                    break;
-                }
-            }
+                });
         }
     }
 
@@ -659,30 +686,6 @@ namespace Server.Custom
     }
 
     // =========================================================================
-    // CONTEXT MENU: CONFIGURE FISH FILTER
-    // =========================================================================
-    public class ConfigureFishFilterEntry : ContextMenuEntry
-    {
-        private readonly FestersFishingPole m_Pole;
-        private readonly Mobile m_From;
-
-        public ConfigureFishFilterEntry(FestersFishingPole pole, Mobile from) : base(6103)
-        {
-            m_Pole = pole;
-            m_From = from;
-        }
-
-        public override void OnClick()
-        {
-            if (m_From == null || m_Pole == null || m_Pole.Deleted)
-                return;
-
-            m_From.CloseGump(typeof(FestersFishFilterGump));
-            m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole));
-        }
-    }
-
-    // =========================================================================
     // FISH FILLET FILTER GUMP
     // Interactive gump for exempting specific fish and quest fish from auto-fillet
     // =========================================================================
@@ -728,7 +731,7 @@ namespace Server.Custom
             m_Selected = selected ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             Closable = true;
-            Draggable = true;
+            Dragable = true;
             Resizable = false;
 
             BuildGump();

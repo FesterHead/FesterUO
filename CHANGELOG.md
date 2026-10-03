@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added `SlowSkillGrind.cs` in `custom-scripts/FesterUO/` and configuration in `Config/FesterUO/SlowSkillGrind.cfg` allowing skills to advance past 100.0 without PowerScrolls over progressive hour-paced intervals (Tier 1 [100-105]: 6h; Tier 2 [105-110]: 12h; Tier 3 [110-115]: 18h; Tier 4 [115-120]: 24h) with persistence in `Saves/SlowSkillGrind/Persistence.bin` and player status commands `[SlowGrind` / `[SlowGrindInfo`.
 
 - Added fish fillet exemption filtering and interactive gump (`FestersFishFilterGump`) to `FestersFishingPole` in [`custom-scripts/FesterUO/CustomAutoTools.cs`](custom-scripts/FesterUO/CustomAutoTools.cs):
-  - Provides right-click context menu configuration ("Customize") and player commands (`[FishFilter`, `[FilletFilter`) to open an interactive configuration gump.
+  - Provides player chat commands (`[ff`, `[FishFilter`, `[FilletFilter`) to open the interactive configuration gump directly from anywhere.
   - Automatically identifies active `ProfessionalFisherQuest` orders from the player's quest log and auto-protects required quest targets (enabled by default) so fish like Red Grouper remain whole in the backpack.
   - Features tabbed browsing across all High Seas fish categories (Deep Water [18 species], Shore [12 species], Dungeon [12 species], Common [2 species]) with active quest target indicators (`[Quest X/Y]`), quick tab selection controls, manual fish checklists, and single-click tooltips showing protection status.
 

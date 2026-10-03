@@ -51,6 +51,7 @@ When modifying or extending the service configuration, adhere strictly to the fo
        - "UMASK=${UMASK:-022}"
        - "DOTNET_CLI_HOME=/server/.dotnet"
        - "HOME=/server"
+       - "DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true"
      ```
 
 5. **Healthchecks**:

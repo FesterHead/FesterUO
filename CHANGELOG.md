@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Enhanced `LegendaryMaster.cs` and added `AutoAdvanceSkillOnUse=true` (`Config/LegendaryMaster/LegendaryMaster.cfg`): fixed task reward calculation to always snap to the next clean 5.0 tier boundary (e.g. 100.6 accurately awards a 105 scroll), and hooked `EventSink.SkillCapChange` to instantly advance the character's base skill to the scroll tier upon consuming a PowerScroll (with automatic down-skill reduction if total skills are capped).
 
 ### Fixed
+- Suppressed extraneous .NET CLI workload verification warning (`An issue was encountered verifying workloads`) during dynamic script compilation by configuring `DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true` in `Dockerfile` and `docker-compose.yaml`.
+- Stripped trailing whitespace in [`patches/32-fish-quest-improvements.patch`](patches/32-fish-quest-improvements.patch) ensuring clean, warning-free patch application during build and verification.
 - Resolved compiler warning CS0108 in `LootFilterGump.cs` by renaming static array `Entries` to `FilterEntries` to prevent shadowing the inherited base `Gump.Entries` property.
 - Fixed premature gump closures and setting corruption in `[LootFilter` (`LootFilterGump.cs`) caused by button ID calculations using raw bit flag enum values (`AosAttribute`, `AosWeaponAttribute`, `SAAbsorptionAttribute`). Replaced arithmetic button ID encoding with a typed index-mapped entry architecture supporting safe toggle buttons, increment/decrement adjustment arrows, direct text entry inputs, and an explicit Apply button.
 

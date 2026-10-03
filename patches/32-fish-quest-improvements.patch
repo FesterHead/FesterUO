@@ -69,7 +69,7 @@ index 514252df..163ae43b 100644
 +                            }
 +                            else
 +                            {
-+                                Quest.Owner.SendLocalizedMessage(1072273, null, 0x23); // You've completed a quest!  Don't forget to collect your reward.							
++                                Quest.Owner.SendLocalizedMessage(1072273, null, 0x23); // You've completed a quest!  Don't forget to collect your reward.
 +                                Quest.Owner.SendSound(Quest.CompleteSound);
 +                            }
                          }

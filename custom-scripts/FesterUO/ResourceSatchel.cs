@@ -137,7 +137,7 @@ namespace Server.Custom
             if (!IsGatheredResource(item))
             {
                 if (message)
-                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources, blank maps, and recall runes.");
+                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources, maps, scrolls, and recall runes.");
 
                 return false;
             }
@@ -158,9 +158,8 @@ namespace Server.Custom
         {
             if (item == null)
                 return false;
-
             return item is RecallRune ||
-                   item is BlankMap ||
+                   (item is MapItem && !(item is TreasureMap)) ||
                    item is BlankScroll ||
                    item is ICommodity ||
                    item is IGem ||

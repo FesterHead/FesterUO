@@ -8,7 +8,7 @@
  *
  * Enhancements:
  * - Dynamic Triggering: Replaced hard-coded 4-hour interval with a minimum 2-hour
- *   interval between events, followed by an hourly 10% chance check requiring at least
+ *   interval between events, followed by a periodic 2% chance check requiring at least
  *   one player character online before scheduling the 10-minute warning countdown.
  */
 
@@ -221,7 +221,7 @@ namespace Server.Custom.ApexHunt
                 }
                 else
                 {
-                    // Minimum 2-hour interval & periodic check (10% chance if >= 1 player online)
+                    // Minimum 2-hour interval & periodic check (2% chance if >= 1 player online)
                     if (now >= _nextCheckTime)
                     {
                         int onlineCount = GetOnlinePlayerCount();

@@ -1,6 +1,6 @@
 # Legendary Master Configuration Directory
 
-This directory (`servuo/Config/LegendaryMaster/`) contains configuration settings for the **Legendary Master of Skills** NPC questmaster system.
+This directory (`Config/LegendaryMaster/`) contains configuration settings for the **Legendary Master of Skills** NPC questmaster system.
 
 ---
 

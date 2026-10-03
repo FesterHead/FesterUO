@@ -1,6 +1,6 @@
 # Base ServUO Platform Configurations
 
-This directory (`servuo/Config/ServUO/`) contains the base ServUO platform configuration files that originate directly from the upstream [ServUO Core](https://github.com/ServUO/ServUO) distribution, tuned specifically for the **FesterUO** private shard.
+This directory (`Config/ServUO/`) contains the base ServUO platform configuration files that originate directly from the upstream [ServUO Core](https://github.com/ServUO/ServUO) distribution, tuned specifically for the **FesterUO** private shard.
 
 ---
 

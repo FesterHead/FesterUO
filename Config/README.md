@@ -1,6 +1,6 @@
 # ServUO Configuration Guide
 
-This directory (`servuo/Config/`) contains the runtime configuration files mounted into the ServUO container at `/server/Config/`.
+This directory (`Config/`) contains the runtime configuration files mounted into the ServUO container at `/server/Config/`.
 
 ServUO dynamically parses every `*.cfg` file in this directory and its subdirectories upon startup. Each file defines a configuration **scope** matching its filename or directory hierarchy. Values are accessed in C# scripts via:
 
@@ -33,9 +33,9 @@ The configuration files are organized into functional subdirectories, each with 
 
 ## Modifying Configurations
 
-1. Edit any `.cfg` file directly on the host in `servuo/Config/`.
+1. Edit any `.cfg` file directly on the host in `Config/`.
 2. Changes to `.cfg` files take effect whenever the container restarts:
    ```bash
-   docker compose restart servuo
+   docker compose restart festeruo
    ```
 3. No image rebuilding or patch recompilation is required when altering values in these `.cfg` files.

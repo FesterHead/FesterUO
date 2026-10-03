@@ -94,15 +94,15 @@ ARG SERVUO_COMMIT=d76bf4443cf76d081ddaf8f57c87ff33749256af
 
 ## 💾 Container Volumes & Data Architecture
 
-The `servuo` service defined in `docker-compose.yaml` utilizes five host bind mounts:
+The `festeruo` service defined in `docker-compose.yaml` utilizes five host bind mounts:
 
 | Host Directory | Container Path | Mode | Purpose |
 | :--- | :--- | :--- | :--- |
-| `${SERVICE_DIR}/FesterUO/Client` | `/server/Client` | `ro` | Provides static UO client files required by ServUO for map geometry, statics, multi structures, and tile data. |
-| `${SERVICE_DIR}/FesterUO/Saves` | `/server/Saves` | `rw` | Stores persistent world data, account credentials, mobiles, items, and scheduled backups. |
-| `${SERVICE_DIR}/FesterUO/Logs` | `/server/Logs` | `rw` | Captures engine logs, command activity, and crash diagnostics on the host. |
-| `${SERVICE_DIR}/FesterUO/custom-scripts` | `/server/Scripts/Custom` | `rw` | Injects custom C# script files dynamically compiled by the .NET SDK on server launch. |
-| `${SERVICE_DIR}/FesterUO/Config` | `/server/Config` | `rw` | Injects custom configuration files (`.cfg`) read by the engine during startup. |
+| `./Client` | `/server/Client` | `ro` | Provides static UO client files required by ServUO for map geometry, statics, multi structures, and tile data. |
+| `./Saves` | `/server/Saves` | `rw` | Stores persistent world data, account credentials, mobiles, items, and scheduled backups. |
+| `./Logs` | `/server/Logs` | `rw` | Captures engine logs, command activity, and crash diagnostics on the host. |
+| `./custom-scripts` | `/server/Scripts/Custom` | `rw` | Injects custom C# script files dynamically compiled by the .NET SDK on server launch. |
+| `./Config` | `/server/Config` | `rw` | Injects custom configuration files (`.cfg`) read by the engine during startup. |
 
 ### Populating the `Client/` Directory
 
@@ -113,7 +113,7 @@ ServUO requires an authentic installation of Ultima Online Classic client data f
 2. **Install the Client**:
    Install and run the game on a Windows computer or virtual machine. Allow the official patcher to complete all updates so all current `.uop`, `.mul`, and `Cliloc` files are fully populated.
 3. **Copy Files to Host**:
-   Copy the contents of the installed client folder (typically `C:\Program Files (x86)\Electronic Arts\Ultima Online Classic`) into `${SERVICE_DIR}/FesterUO/Client/` on your Docker host.
+   Copy the contents of the installed client folder (typically `C:\Program Files (x86)\Electronic Arts\Ultima Online Classic`) into `./Client/` on your Docker host.
 4. **DataPath Configuration**:
    The Dockerfile automatically generates `/server/Config/DataPath.cfg` containing `CustomPath=/server/Client`, instructing ServUO to read all client assets from the mounted directory.
 
@@ -135,25 +135,25 @@ To connect to your ServUO server, modern open-source enhanced clients are recomm
 ### Build the Image
 Build the container using Docker Compose:
 ```bash
-docker compose build servuo
+docker compose build festeruo
 ```
 
 ### Start the Service
 Start the server in the background:
 ```bash
-docker compose up -d servuo
+docker compose up -d festeruo
 ```
 
 ### View Server Logs
 Monitor the console output in real time:
 ```bash
-docker compose logs -f servuo
+docker compose logs -f festeruo
 ```
 
 ### Attach to the Server Console
 To interact directly with the ServUO console:
 ```bash
-docker attach servuo
+docker attach festeruo
 ```
 
 > [!WARNING]
@@ -212,30 +212,30 @@ Commit all generated fixtures, dungeons, and spawns to disk, then restore automa
 
 Follow these steps to completely reset the server world state and accounts back to a clean baseline:
 
-### Step 1: Stop the ServUO Container
+### Step 1: Stop the FesterUO Container
 ```bash
-docker compose stop servuo
+docker compose stop festeruo
 ```
 
 ### Step 2: Clear the Saves and Logs Directories
 Back up the existing world save state, purge runtime data, and preserve gitkeep anchors:
 ```bash
-cp -r FesterUO/Saves FesterUO/Saves.backup.$(date +%Y%m%d)
-rm -rf FesterUO/Saves/* FesterUO/Saves/.[!.]*
-touch FesterUO/Saves/.gitkeep
-rm -rf FesterUO/Logs/*
-touch FesterUO/Logs/.gitkeep
+cp -r Saves Saves.backup.$(date +%Y%m%d)
+rm -rf Saves/* Saves/.[!.]*
+touch Saves/.gitkeep
+rm -rf Logs/*
+touch Logs/.gitkeep
 ```
 
-### Step 3: Start ServUO
+### Step 3: Start FesterUO
 ```bash
-docker compose up -d servuo
+docker compose up -d festeruo
 ```
 
 ### Step 4: Create Your Initial Admin Account
 Attach to the container console to respond to the initial administrator setup prompt:
 ```bash
-docker attach servuo
+docker attach festeruo
 ```
 
 When prompted:

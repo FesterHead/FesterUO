@@ -1,6 +1,6 @@
 # FesterUO Custom Shard Configurations
 
-This directory (`servuo/Config/FesterUO/`) contains custom gameplay and world tuning configuration files authored specifically for the **FesterUO** private shard.
+This directory (`Config/FesterUO/`) contains custom gameplay and world tuning configuration files authored specifically for the **FesterUO** private shard.
 
 ---
 
@@ -9,6 +9,6 @@ This directory (`servuo/Config/FesterUO/`) contains custom gameplay and world tu
 | Configuration File | Scope | Consuming Systems & Purpose |
 | :--- | :--- | :--- |
 | [`Harvest.cfg`](Harvest.cfg) | `Harvest` | **Consuming Patches**: `03-harvest-amount`, `04-fishing-delay`, `05-mining-delay`, `06-lumberjacking-delay`<br>Configures resource harvest yields (`MinYield=3`, `MaxYield=6`) and tool delays (`FishingDelay=2.0s`, `MiningDelay=1.0s`, `LumberjackingDelay=1.0s`). |
-| [`Reagents.cfg`](Reagents.cfg) | `Reagents` | **Consuming Scripts**: `servuo/custom-scripts/FesterUO/WildernessReagents.cs`<br>Configures automated wilderness ground reagent spawning (`Enabled=True`, `MaxGroundReagents=500`, `RespawnIntervalMinutes=15`, `MinSpawnAmount=1`, `MaxSpawnAmount=3`, `SpawnTrammel=True`, `SpawnFelucca=True`). |
-| [`SlowSkillGrind.cfg`](SlowSkillGrind.cfg) | `SlowSkillGrind` | **Consuming Scripts**: `servuo/custom-scripts/FesterUO/SlowSkillGrind.cs`<br>Configures progressive hours-based skill gain past 100 without PowerScrolls (`Enabled=True`, `Tier1Hours=6.0` [100-105], `Tier2Hours=12.0` [105-110], `Tier3Hours=18.0` [110-115], `Tier4Hours=24.0` [115-120], `MaxSkillCap=120.0`). |
+| [`Reagents.cfg`](Reagents.cfg) | `Reagents` | **Consuming Scripts**: `custom-scripts/FesterUO/WildernessReagents.cs`<br>Configures automated wilderness ground reagent spawning (`Enabled=True`, `MaxGroundReagents=500`, `RespawnIntervalMinutes=15`, `MinSpawnAmount=1`, `MaxSpawnAmount=3`, `SpawnTrammel=True`, `SpawnFelucca=True`). |
+| [`SlowSkillGrind.cfg`](SlowSkillGrind.cfg) | `SlowSkillGrind` | **Consuming Scripts**: `custom-scripts/FesterUO/SlowSkillGrind.cs`<br>Configures progressive hours-based skill gain past 100 without PowerScrolls (`Enabled=True`, `Tier1Hours=6.0` [100-105], `Tier2Hours=12.0` [105-110], `Tier3Hours=18.0` [110-115], `Tier4Hours=24.0` [115-120], `MaxSkillCap=120.0`). |
 | [`Stables.cfg`](Stables.cfg) | `Stables` | **Consuming Patches**: `08-stable-slots`<br>Configures baseline stable stalls (`BaseSlots=12`) granted to every character before taming skill bonuses. |

@@ -1,6 +1,6 @@
 # Legendary Pets Configuration & Guide
 
-This directory (`servuo/Config/LegendaryPets/`) contains standalone configuration files for the **Legendary Pets** system (patch [`13-legendary-pets.patch`](../../patches/13-legendary-pets.patch)).
+This directory (`Config/LegendaryPets/`) contains standalone configuration files for the **Legendary Pets** system (patch [`13-legendary-pets.patch`](../../patches/13-legendary-pets.patch)).
 
 ---
 

@@ -69,8 +69,8 @@ Players interact with the NPC by speaking nearby (within 5 tiles):
 
 ## Rewards
 
-- **PowerScroll**: A +5 PowerScroll matching the requested skill tier (105, 110, 115, or 120) placed directly into the player's backpack.
-- **Bonus Stat Cap Scroll**: A 1% chance (configurable) to receive an additional Stat Cap Scroll (+5 up to +25).
+- **PowerScroll**: A +5 PowerScroll matching the requested skill tier (105, 110, 115, or 120) placed directly into the player's backpack. When consumed, it instantly advances the character's base skill to the scroll level (e.g. 100.6 with a 105 scroll immediately jumps to 105.0).
+- **Bonus Stat Cap Scroll**: A 5% chance (configurable) to receive an additional Stat Cap Scroll (+5 up to +25).
 
 ---
 
@@ -80,18 +80,19 @@ All task timers, kill counts, scaling factors, skill limits, stat scroll rewards
 
 ```ini
 # --- Quest Timers ---
-TaskTimeMinutes=60
-ExtraTimeMinutes=10
+TaskTimeMinutes=180
+ExtraTimeMinutes=20
 
 # --- Kill Counts & Difficulty Scaling ---
 BaseMinKills=1
-BaseMaxKills=3
-KillsPerTier=1
+BaseMaxKills=1
+KillsPerTier=0
 
 # --- Skill Progression Limits ---
 MinSkillRequired=100.0
 MaxSkillCap=120.0
 ScrollIncrement=5.0
+AutoAdvanceSkillOnUse=true
 
 # --- Bonus Stat Cap Scrolls ---
 EnableStatScrolls=true
@@ -104,7 +105,7 @@ InteractionRange=5
 IdleBarkChance=0.15
 
 # --- Target Creature Pool ---
-Creatures=Balron, ShadowWyrm, AncientLich, AncientWyrm, SkeletalDragon, GreaterDragon, Succubus, RottingCorpse, BloodElemental, PoisonElemental, SerpentineDragon, BoneDemon, RuneBeetle, Yamandon, WhiteWyrm
+Creatures=Dragon, WhiteWyrm, GreaterDragon, ShadowWyrm, AncientWyrm, SkeletalDragon, SerpentineDragon, Balron, Succubus, BoneDemon, AncientLich, RottingCorpse, RuneBeetle, Yamandon, PoisonElemental, BloodElemental
 ```
 
 Changes take effect upon restarting the container:

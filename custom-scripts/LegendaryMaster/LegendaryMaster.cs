@@ -102,6 +102,7 @@ namespace Server.Custom.Misc
         public static void Initialize()
         {
             EventSink.CreatureDeath += EventSink_CreatureDeath;
+            EventSink.SkillCapChange += EventSink_SkillCapChange;
             LoadCreatures();
         }
 
@@ -220,8 +221,15 @@ namespace Server.Custom.Misc
                 {
                     currentTask.Completed = true;
 
+                    double maxCap = Config.Get("LegendaryMaster.MaxSkillCap", 120.0);
                     double scrollInc = Config.Get("LegendaryMaster.ScrollIncrement", 5.0);
-                    double rewardCap = currentTask.SkillCap + scrollInc;
+
+                    double rewardCap = currentTask.SkillCap;
+                    if (rewardCap <= 100.0 || rewardCap % scrollInc != 0)
+                    {
+                        rewardCap = Math.Min(maxCap, (Math.Floor(rewardCap / scrollInc) + 1.0) * scrollInc);
+                    }
+
                     pm.AddToBackpack(new PowerScroll(currentTask.PlayerSkill, rewardCap));
                     pm.SendMessage(53, $"Congratulations! You were rewarded a {rewardCap:F0} {currentTask.PlayerSkill} Powerscroll!");
 
@@ -442,13 +450,17 @@ namespace Server.Custom.Misc
         private void AssignTask(PlayerMobile pm, Skill skill, Type target, int amount)
         {
             int startMinutes = Config.Get("LegendaryMaster.TaskTimeMinutes", 60);
+            double maxCap = Config.Get("LegendaryMaster.MaxSkillCap", 120.0);
             double scrollInc = Config.Get("LegendaryMaster.ScrollIncrement", 5.0);
+
+            // Clean step to next tier (e.g. 100.0 -> 105.0, 100.6 -> 105.0, 105.0 -> 110.0)
+            double targetRewardCap = Math.Min(maxCap, (Math.Floor(skill.Cap / scrollInc) + 1.0) * scrollInc);
 
             var info = new SkillTaskInfo
             {
                 PlayerSerial = pm.Serial,
                 PlayerSkill = skill.SkillName,
-                SkillCap = skill.Cap,
+                SkillCap = targetRewardCap,
                 TargetType = target,
                 TimeLimit = DateTime.UtcNow + TimeSpan.FromMinutes(startMinutes),
                 TaskAmount = amount,
@@ -458,7 +470,41 @@ namespace Server.Custom.Misc
             m_TaskInfos.Add(info);
 
             Effects.SendBoltEffect(pm, true);
-            SayTo(pm, $"Task assigned! Slay {amount} {FormatCreatureName(target)} within {startMinutes} minutes to earn a {skill.Cap + scrollInc:F0} {skill.Name} Powerscroll!");
+            SayTo(pm, $"Task assigned! Slay {amount} {FormatCreatureName(target)} within {startMinutes} minutes to earn a {targetRewardCap:F0} {skill.Name} Powerscroll!");
+        }
+
+        private static void EventSink_SkillCapChange(SkillCapChangeEventArgs e)
+        {
+            if (!Config.Get("LegendaryMaster.AutoAdvanceSkillOnUse", true))
+                return;
+
+            if (e.Mobile is PlayerMobile pm && e.Skill != null)
+            {
+                if (e.NewCap > e.OldCap && e.Skill.Base < e.NewCap)
+                {
+                    double targetVal = e.NewCap;
+
+                    // Make room under total skill cap if needed by lowering skills set to down
+                    int toGain = (int)Math.Round(targetVal * 10.0) - e.Skill.BaseFixedPoint;
+                    if (toGain > 0 && pm.Skills.Total + toGain > pm.Skills.Cap)
+                    {
+                        int needed = (pm.Skills.Total + toGain) - pm.Skills.Cap;
+                        for (int i = 0; i < pm.Skills.Length && needed > 0; i++)
+                        {
+                            Skill other = pm.Skills[i];
+                            if (other != e.Skill && other.Lock == SkillLock.Down && other.BaseFixedPoint > 0)
+                            {
+                                int drop = Math.Min(needed, other.BaseFixedPoint);
+                                other.BaseFixedPoint -= drop;
+                                needed -= drop;
+                            }
+                        }
+                    }
+
+                    e.Skill.Base = targetVal;
+                    pm.SendMessage(68, $"Your {e.Skill.Name} skill has advanced to {targetVal:F1}!");
+                }
+            }
         }
 
         public LegendaryMaster(Serial serial) : base(serial)

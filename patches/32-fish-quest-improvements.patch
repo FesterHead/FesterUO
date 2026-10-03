@@ -1,7 +1,13 @@
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
-index da42cff3..2b8a74e1 100644
---- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
-+++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
+index 8e6a26f6..8ed1facb 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs	
+@@ -1,4 +1,4 @@
+-﻿using Server;
++using Server;
+ using System;
+ using Server.Engines.Quests;
+ using Server.Multis;
 @@ -47,7 +47,8 @@ namespace Server.Mobiles
                  SayTo(player, 1116514); //Bring yer ship around, I might have some work for ye!);
              else
@@ -13,10 +19,10 @@ index da42cff3..2b8a74e1 100644
                  if (!FishQuestHelper.HasFishQuest(player, this, inRange))
                  {
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
-index 2def7d40..9f018e3a 100644
---- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
-+++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
-@@ -378,8 +378,15 @@ namespace Server.Engines.Quests
+index b90c7e43..60360674 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
+@@ -377,8 +377,15 @@ namespace Server.Engines.Quests
  
                      if (quest.Completed)
                      {
@@ -35,11 +41,16 @@ index 2def7d40..9f018e3a 100644
                      else
                      {
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
-index b29bfa50..6999a9b2 100644
---- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
-+++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
-@@ -52,14 +52,22 @@ namespace Server.Engines.Quests
-                     if (item.GetType() == kvp.Key)
+index 514252df..163ae43b 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs	
+@@ -1,4 +1,4 @@
+-﻿using Server;
++using Server;
+ using System;
+ using System.Collections.Generic;
+ using Server.Multis;
+@@ -52,13 +52,23 @@ namespace Server.Engines.Quests
                      {
                          kvp.Value[0] += item.Amount;
  
@@ -68,10 +79,17 @@ index b29bfa50..6999a9b2 100644
  
                          return true;
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
-index 32549d5c..85dfca93 100644
---- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
-+++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
-@@ -90,17 +90,32 @@ namespace Server.Engines.Quests
+index eb0d53c2..835e2f74 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs	
+@@ -1,4 +1,4 @@
+-﻿using Server;
++using Server;
+ using System;
+ using System.Collections.Generic;
+ using Server.Multis;
+@@ -89,18 +89,34 @@ namespace Server.Engines.Quests
+ 
          public override void OnAccept()
          {
 -            if (m_Boat == null)
@@ -79,39 +97,38 @@ index 32549d5c..85dfca93 100644
 +                m_Boat = FishQuestHelper.GetBoat(Owner);
 +
 +            if (m_Boat == null || m_Boat.Deleted)
-             {
-+                if (Owner != null)
-+                    Owner.SendMessage("You must have a boat deployed in the world to accept this quest.");
-+
-                 RemoveQuest(false);
-                 return;
-             }
- 
-+            Container hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
-+
-+            if (hold == null)
 +            {
 +                if (Owner != null)
-+                    Owner.SendMessage("Your boat hold could not be found.");
++                    Owner.SendMessage("You must have a boat deployed in the world to accept this quest.");
 +
 +                RemoveQuest(false);
 +                return;
 +            }
 +
++            Container hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
++
++            if (hold == null)
+             {
++                if (Owner != null)
++                    Owner.SendMessage("Your boat hold could not be found.");
++
+                 RemoveQuest(false);
+                 return;
+             }
+ 
              m_Crate = new ShippingCrate(this);
--
++            hold.DropItem(m_Crate);
+ 
 -            if (m_Boat is BaseGalleon)
 -                ((BaseGalleon)m_Boat).GalleonHold.DropItem(m_Crate);
 -            else
 -                m_Boat.Hold.DropItem(m_Crate);
-+            hold.DropItem(m_Crate);
-+
 +            if (Owner != null)
 +                Owner.SendMessage(0x35, "A shipping crate has been placed in your boat's hold.");
  
              base.OnAccept();
          }
-@@ -191,6 +206,8 @@ namespace Server.Engines.Quests
+@@ -191,6 +207,8 @@ namespace Server.Engines.Quests
              Container hold = null;
              if (m_Crate.RootParent is Container)
                  hold = (Container)m_Crate.RootParent;
@@ -120,25 +137,24 @@ index 32549d5c..85dfca93 100644
  
              //Deletes quest reqeust
              FishQuestObjective obj = GetObjective();
-@@ -200,10 +217,12 @@ namespace Server.Engines.Quests
+@@ -200,11 +218,13 @@ namespace Server.Engines.Quests
                      m_Crate.ConsumeTotal(kvp.Key, kvp.Value[1]);
              }
  
 -            //then moves any extras to the hold
 -            if (hold != null)
 +            //then moves any extras to the hold (or backpack if hold unavailable)
-             foreach (Item item in new List<Item>(m_Crate.Items))
--                    hold.DropItem(item);
-+            {
++            foreach (Item item in new List<Item>(m_Crate.Items))
+             {
+-                foreach (Item item in new List<Item>(m_Crate.Items))
 +                if (hold != null)
-+                    hold.DropItem(item);
+                     hold.DropItem(item);
 +                else if (Owner != null)
 +                    Owner.PlaceInBackpack(item);
-+            }
+             }
  
              if (m_Crate != null)
-                 m_Crate.Delete();
-@@ -234,7 +253,10 @@ namespace Server.Engines.Quests
+@@ -233,7 +253,10 @@ namespace Server.Engines.Quests
              g.AddHtmlLocalized(98, 140, 312, 16, 1049073, 0x2710, false, false); // Objective:
  
              g.AddHtmlLocalized(98, 160, 312, 16, 1116509, 0x15F90, false, false); //Fill the crate on your ship with the correct fish.
@@ -151,10 +167,10 @@ index 32549d5c..85dfca93 100644
              return true;
          }
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
-index edfcbfa1..a2813ec7 100644
---- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
-+++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
-@@ -76,12 +76,19 @@ namespace Server.Items
+index 9027ee8d..ce70cf7c 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
+@@ -75,12 +75,19 @@ namespace Server.Items
                  loc++;
              }
  
@@ -179,7 +195,7 @@ index edfcbfa1..a2813ec7 100644
  
              list.Add(1076255); //NO-TRADE
  
-@@ -183,6 +190,23 @@ namespace Server.Items
+@@ -183,6 +190,26 @@ namespace Server.Items
              return false;
          }
  

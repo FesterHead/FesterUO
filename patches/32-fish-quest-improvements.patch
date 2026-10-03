@@ -19,10 +19,10 @@ index 8e6a26f6..8ed1facb 100644
                  if (!FishQuestHelper.HasFishQuest(player, this, inRange))
                  {
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
-index b90c7e43..60360674 100644
+index 2def7d40..ecd52060 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
-@@ -377,8 +377,15 @@ namespace Server.Engines.Quests
+@@ -356,8 +356,15 @@ namespace Server.Engines.Quests
  
                      if (quest.Completed)
                      {
@@ -41,7 +41,7 @@ index b90c7e43..60360674 100644
                      else
                      {
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
-index 514252df..163ae43b 100644
+index 514252df..610216a1 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs	
 @@ -1,4 +1,4 @@
@@ -50,7 +50,7 @@ index 514252df..163ae43b 100644
  using System;
  using System.Collections.Generic;
  using Server.Multis;
-@@ -52,13 +52,23 @@ namespace Server.Engines.Quests
+@@ -52,13 +52,30 @@ namespace Server.Engines.Quests
                      {
                          kvp.Value[0] += item.Amount;
  
@@ -63,9 +63,16 @@ index 514252df..163ae43b 100644
 +
 +                            if (Config.Get("Expansion.FishQuestAutoComplete", true))
 +                            {
-+                                Quest.Owner.SendSound(Quest.CompleteSound);
-+                                Quest.Owner.SendMessage(0x35, "Your fishing order has been filled and completed! Your reward has been placed in your backpack.");
-+                                Timer.DelayCall(TimeSpan.Zero, Quest.GiveRewards);
++                                if (Quest is ProfessionalFisherQuest && ((ProfessionalFisherQuest)Quest).Crate != null)
++                                {
++                                    ((ProfessionalFisherQuest)Quest).Crate.CompleteQuest(Quest.Owner);
++                                }
++                                else
++                                {
++                                    Quest.Owner.SendSound(Quest.CompleteSound);
++                                    Quest.Owner.SendMessage(0x35, "Your fishing order has been filled and completed! Your reward has been placed in your backpack.");
++                                    Timer.DelayCall(TimeSpan.Zero, Quest.GiveRewards);
++                                }
 +                            }
 +                            else
 +                            {
@@ -79,7 +86,7 @@ index 514252df..163ae43b 100644
  
                          return true;
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
-index eb0d53c2..835e2f74 100644
+index eb0d53c2..5900a93b 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs	
 @@ -1,4 +1,4 @@
@@ -128,16 +135,21 @@ index eb0d53c2..835e2f74 100644
  
              base.OnAccept();
          }
-@@ -191,6 +207,8 @@ namespace Server.Engines.Quests
+@@ -189,8 +205,12 @@ namespace Server.Engines.Quests
+                 return;
+ 
              Container hold = null;
-             if (m_Crate.RootParent is Container)
+-            if (m_Crate.RootParent is Container)
++            if (m_Crate.Parent is Container)
++                hold = (Container)m_Crate.Parent;
++            else if (m_Crate.RootParent is Container)
                  hold = (Container)m_Crate.RootParent;
 +            else if (m_Boat != null)
 +                hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
  
              //Deletes quest reqeust
              FishQuestObjective obj = GetObjective();
-@@ -200,11 +218,13 @@ namespace Server.Engines.Quests
+@@ -200,11 +220,13 @@ namespace Server.Engines.Quests
                      m_Crate.ConsumeTotal(kvp.Key, kvp.Value[1]);
              }
  
@@ -154,7 +166,7 @@ index eb0d53c2..835e2f74 100644
              }
  
              if (m_Crate != null)
-@@ -233,7 +253,10 @@ namespace Server.Engines.Quests
+@@ -233,7 +255,10 @@ namespace Server.Engines.Quests
              g.AddHtmlLocalized(98, 140, 312, 16, 1049073, 0x2710, false, false); // Objective:
  
              g.AddHtmlLocalized(98, 160, 312, 16, 1116509, 0x15F90, false, false); //Fill the crate on your ship with the correct fish.
@@ -167,10 +179,64 @@ index eb0d53c2..835e2f74 100644
              return true;
          }
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
-index 9027ee8d..ce70cf7c 100644
+index 9027ee8d..87dde1a5 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
-@@ -75,12 +75,19 @@ namespace Server.Items
+@@ -55,6 +55,53 @@ namespace Server.Items
+             Quest = quest;
+         }
+ 
++        private bool m_Completing;
++
++        public bool CheckComplete()
++        {
++            if (Quest == null)
++                return false;
++
++            FishQuestObjective obj = Quest.GetObjective();
++            return (obj != null && obj.IsCompleted) || Quest.Completed;
++        }
++
++        public void CompleteQuest(Mobile from)
++        {
++            if (m_Completing || Quest == null || Deleted)
++                return;
++
++            m_Completing = true;
++
++            Mobile owner = from ?? Quest.Owner;
++
++            FishQuestObjective obj = Quest.GetObjective();
++            if (obj != null)
++                obj.CurProgress = 500;
++
++            if (owner != null)
++            {
++                owner.SendSound(Quest.CompleteSound);
++                owner.SendMessage(0x35, "Your fishing order has been filled and completed! Your reward has been placed in your backpack.");
++            }
++
++            Quest.GiveRewards();
++        }
++
++        public override void OnDoubleClick(Mobile from)
++        {
++            if (Quest != null && Quest.Owner == from)
++            {
++                if (Config.Get("Expansion.FishQuestAutoComplete", true) && CheckComplete())
++                {
++                    CompleteQuest(from);
++                    return;
++                }
++            }
++
++            base.OnDoubleClick(from);
++        }
++
+         public override void GetProperties(ObjectPropertyList list)
+         {
+             base.GetProperties(list);
+@@ -75,12 +122,33 @@ namespace Server.Items
                  loc++;
              }
  
@@ -180,7 +246,21 @@ index 9027ee8d..ce70cf7c 100644
 -                list.Add((string)delivery);
 +            if (Config.Get("Expansion.FishQuestAutoComplete", true))
 +            {
-+                list.Add("Automated Delivery: Fulfills when filled");
++                if (CheckComplete())
++                {
++                    list.Add("Automated Delivery: Order Complete (Double-click to claim)");
++                    Timer.DelayCall(TimeSpan.Zero, () =>
++                    {
++                        if (Quest != null && Quest.Owner != null && !Deleted && CheckComplete())
++                        {
++                            CompleteQuest(Quest.Owner);
++                        }
++                    });
++                }
++                else
++                {
++                    list.Add("Automated Delivery: Fulfills when filled");
++                }
 +            }
              else
 -                list.Add((int)delivery);
@@ -195,7 +275,7 @@ index 9027ee8d..ce70cf7c 100644
  
              list.Add(1076255); //NO-TRADE
  
-@@ -183,6 +190,26 @@ namespace Server.Items
+@@ -183,6 +251,26 @@ namespace Server.Items
              return false;
          }
  

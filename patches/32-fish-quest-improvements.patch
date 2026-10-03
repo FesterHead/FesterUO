@@ -19,10 +19,10 @@ index 8e6a26f6..8ed1facb 100644
                  if (!FishQuestHelper.HasFishQuest(player, this, inRange))
                  {
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
-index 2def7d40..ecd52060 100644
+index b90c7e43..60360674 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
-@@ -356,8 +356,15 @@ namespace Server.Engines.Quests
+@@ -377,8 +377,15 @@ namespace Server.Engines.Quests
  
                      if (quest.Completed)
                      {
@@ -104,7 +104,7 @@ index eb0d53c2..5900a93b 100644
 +                m_Boat = FishQuestHelper.GetBoat(Owner);
 +
 +            if (m_Boat == null || m_Boat.Deleted)
-+            {
+             {
 +                if (Owner != null)
 +                    Owner.SendMessage("You must have a boat deployed in the world to accept this quest.");
 +
@@ -115,7 +115,7 @@ index eb0d53c2..5900a93b 100644
 +            Container hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
 +
 +            if (hold == null)
-             {
++            {
 +                if (Owner != null)
 +                    Owner.SendMessage("Your boat hold could not be found.");
 +
@@ -179,10 +179,10 @@ index eb0d53c2..5900a93b 100644
              return true;
          }
 diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
-index 9027ee8d..87dde1a5 100644
+index 9027ee8d..87198076 100644
 --- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
 +++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs	
-@@ -55,6 +55,53 @@ namespace Server.Items
+@@ -55,6 +55,59 @@ namespace Server.Items
              Quest = quest;
          }
  
@@ -216,7 +216,13 @@ index 9027ee8d..87dde1a5 100644
 +                owner.SendMessage(0x35, "Your fishing order has been filled and completed! Your reward has been placed in your backpack.");
 +            }
 +
-+            Quest.GiveRewards();
++            Timer.DelayCall(TimeSpan.Zero, () =>
++            {
++                if (Quest != null)
++                {
++                    Quest.GiveRewards();
++                }
++            });
 +        }
 +
 +        public override void OnDoubleClick(Mobile from)
@@ -236,7 +242,7 @@ index 9027ee8d..87dde1a5 100644
          public override void GetProperties(ObjectPropertyList list)
          {
              base.GetProperties(list);
-@@ -75,12 +122,33 @@ namespace Server.Items
+@@ -75,12 +128,22 @@ namespace Server.Items
                  loc++;
              }
  
@@ -247,20 +253,9 @@ index 9027ee8d..87dde1a5 100644
 +            if (Config.Get("Expansion.FishQuestAutoComplete", true))
 +            {
 +                if (CheckComplete())
-+                {
 +                    list.Add("Automated Delivery: Order Complete (Double-click to claim)");
-+                    Timer.DelayCall(TimeSpan.Zero, () =>
-+                    {
-+                        if (Quest != null && Quest.Owner != null && !Deleted && CheckComplete())
-+                        {
-+                            CompleteQuest(Quest.Owner);
-+                        }
-+                    });
-+                }
 +                else
-+                {
 +                    list.Add("Automated Delivery: Fulfills when filled");
-+                }
 +            }
              else
 -                list.Add((int)delivery);
@@ -275,7 +270,29 @@ index 9027ee8d..87dde1a5 100644
  
              list.Add(1076255); //NO-TRADE
  
-@@ -183,6 +251,26 @@ namespace Server.Items
+@@ -149,20 +212,7 @@ namespace Server.Items
+ 
+         public override bool OnDragDrop(Mobile from, Item dropped)
+         {
+-            if (dropped is BaseHighseasFish && Quest != null)
+-            {
+-                FishQuestObjective obj = Quest.GetObjective();
+-
+-                if (obj != null && obj.CheckLift(dropped) && base.OnDragDrop(from, dropped))
+-                {
+-                    obj.Update(dropped);
+-                    InvalidateProperties();
+-                    return true;
+-                }
+-            }
+-
+-            from.SendLocalizedMessage(1116461); // This is not needed to fill the order.
+-            return false;
++            return base.OnDragDrop(from, dropped);
+         }
+ 
+         public override bool OnDragDropInto(Mobile from, Item dropped, Point3D p)
+@@ -183,6 +233,26 @@ namespace Server.Items
              return false;
          }
  

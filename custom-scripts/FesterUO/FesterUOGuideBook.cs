@@ -1,5 +1,6 @@
 using System;
 using Server;
+using Server.Commands;
 using Server.Items;
 
 namespace Server.Custom
@@ -230,6 +231,19 @@ namespace Server.Custom
                 "[ApexHuntTop",
                 "  View hunt rankings."),
             new BookPageInfo(
+                "PLAYER COMMANDS 4",
+                "-------------------",
+                "[guide",
+                "  Opens or receives the",
+                "  latest Adventurer's",
+                "  Guide edition.",
+                "",
+                "[guidebook",
+                "  Alias for [guide.",
+                "",
+                "[getguide",
+                "  Alias for [guide."),
+            new BookPageInfo(
                 "LEGENDARY MASTER",
                 "-------------------",
                 "Seek the Master of",
@@ -285,6 +299,46 @@ namespace Server.Custom
             Hue = 0x482; // Antique gilded hue
             LootType = LootType.Blessed;
             Weight = 1.0;
+        }
+
+        public static new void Initialize()
+        {
+            CommandSystem.Register("Guide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("GuideBook", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("GetGuide", AccessLevel.Player, Guide_OnCommand);
+        }
+
+        [Usage("Guide")]
+        [Aliases("GuideBook", "GetGuide")]
+        [Description("Opens your Adventurer's Guide or provides a fresh copy updated to the latest edition.")]
+        private static void Guide_OnCommand(CommandEventArgs e)
+        {
+            Mobile from = e.Mobile;
+            if (from == null)
+                return;
+
+            if (from.Backpack == null)
+            {
+                from.SendMessage(38, "You must have a backpack to receive a guide book.");
+                return;
+            }
+
+            FesterUOGuideBook existing = from.Backpack.FindItemByType<FesterUOGuideBook>();
+
+            if (existing != null)
+            {
+                existing.Delete();
+                from.SendMessage(68, "Your Adventurer's Guide has been updated to the latest edition.");
+            }
+            else
+            {
+                from.SendMessage(68, "A blessed Adventurer's Guide has been placed in your backpack.");
+            }
+
+            FesterUOGuideBook guide = new FesterUOGuideBook();
+            from.Backpack.DropItem(guide);
+            from.PlaySound(0x249);
+            guide.OnDoubleClick(from);
         }
 
         public FesterUOGuideBook(Serial serial) : base(serial)

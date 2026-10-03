@@ -90,10 +90,7 @@ namespace Server.Custom
         {
             base.OnItemAdded(item);
 
-            if (item != null)
-            {
-                item.Weight = 0.0;
-            }
+            ZeroWeightRecursive(item);
         }
 
         // When an item is withdrawn from the satchel, restore its natural default weight
@@ -101,16 +98,45 @@ namespace Server.Custom
         {
             base.OnItemRemoved(item);
 
-            if (item != null)
+            RestoreWeightRecursive(item, this);
+        }
+
+        public static void ZeroWeightRecursive(Item item)
+        {
+            if (item == null)
+                return;
+
+            item.Weight = 0.0;
+
+            if (item is Container cont && cont.Items != null)
             {
-                Timer.DelayCall(TimeSpan.Zero, () =>
+                for (int i = 0; i < cont.Items.Count; i++)
                 {
-                    if (item != null && !item.Deleted && !item.IsChildOf(this))
-                    {
-                        item.Weight = -1;
-                    }
-                });
+                    ZeroWeightRecursive(cont.Items[i]);
+                }
             }
+        }
+
+        public static void RestoreWeightRecursive(Item item, FestersResourceSatchel satchel)
+        {
+            if (item == null)
+                return;
+
+            Timer.DelayCall(TimeSpan.Zero, () =>
+            {
+                if (item != null && !item.Deleted && (satchel == null || !item.IsChildOf(satchel)))
+                {
+                    item.Weight = -1;
+
+                    if (item is Container cont && cont.Items != null)
+                    {
+                        for (int i = 0; i < cont.Items.Count; i++)
+                        {
+                            RestoreWeightRecursive(cont.Items[i], satchel);
+                        }
+                    }
+                }
+            });
         }
 
         public override bool DisplaysContent => false;
@@ -134,10 +160,28 @@ namespace Server.Custom
             if (item == null)
                 return false;
 
-            if (!IsGatheredResource(item))
+            if (item is Container cont)
+            {
+                if (cont is FestersResourceSatchel)
+                {
+                    if (message)
+                        from?.SendMessage(38, "You cannot place a resource satchel inside another satchel.");
+
+                    return false;
+                }
+
+                if (!IsValidContainer(cont))
+                {
+                    if (message)
+                        from?.SendMessage(38, "The satchel only accepts organization bags containing valid resources, scrolls, maps, or recall runes.");
+
+                    return false;
+                }
+            }
+            else if (!IsGatheredResource(item))
             {
                 if (message)
-                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources, maps, scrolls, and recall runes.");
+                    from?.SendMessage(38, "The satchel only accepts raw or converted harvesting resources, maps, scrolls, recall runes, and organization bags.");
 
                 return false;
             }
@@ -149,6 +193,34 @@ namespace Server.Custom
                     SendFullItemsMessage(from, item);
 
                 return false;
+            }
+
+            return true;
+        }
+
+        public static bool IsValidContainer(Container cont)
+        {
+            if (cont == null || cont is FestersResourceSatchel || cont is Corpse || cont is TrashBarrel)
+                return false;
+
+            if (cont.Items == null)
+                return true;
+
+            for (int i = 0; i < cont.Items.Count; i++)
+            {
+                Item child = cont.Items[i];
+                if (child == null)
+                    continue;
+
+                if (child is Container subCont)
+                {
+                    if (!IsValidContainer(subCont))
+                        return false;
+                }
+                else if (!IsGatheredResource(child))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -180,6 +252,8 @@ namespace Server.Custom
                    item is Fish ||
                    item is BaseFish ||
                    item is BigFish ||
+                   item is BaseHighseasFish ||
+                   item is BaseCrabAndLobster ||
                    item is FishSteak ||
                    item is RawFishSteak ||
                    item is BaseReagent ||
@@ -214,13 +288,52 @@ namespace Server.Custom
             {
                 FestersResourceSatchel satchel = from.Backpack.FindItemByType<FestersResourceSatchel>();
 
-                if (satchel != null && satchel.TryDropItem(from, resource, false))
+                if (satchel != null)
                 {
-                    return;
+                    // Check if an existing matching stack exists in any organization sub-bags or satchel
+                    if (satchel.TryStackResource(from, resource))
+                        return;
+
+                    // Otherwise drop into satchel root
+                    if (satchel.TryDropItem(from, resource, false))
+                        return;
                 }
             }
 
             from.AddToBackpack(resource);
+        }
+
+        public bool TryStackResource(Mobile from, Item dropped)
+        {
+            if (dropped == null || !dropped.Stackable)
+                return false;
+
+            return TryStackRecursive(this, from, dropped);
+        }
+
+        private static bool TryStackRecursive(Container cont, Mobile from, Item dropped)
+        {
+            if (cont?.Items == null)
+                return false;
+
+            for (int i = 0; i < cont.Items.Count; i++)
+            {
+                Item item = cont.Items[i];
+                if (item == null)
+                    continue;
+
+                if (item is Container subCont)
+                {
+                    if (TryStackRecursive(subCont, from, dropped))
+                        return true;
+                }
+                else if (item.StackWith(from, dropped, false))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public FestersResourceSatchel(Serial serial) : base(serial) { }
@@ -245,10 +358,7 @@ namespace Server.Custom
             {
                 for (int i = 0; i < Items.Count; i++)
                 {
-                    if (Items[i] != null)
-                    {
-                        Items[i].Weight = 0.0;
-                    }
+                    ZeroWeightRecursive(Items[i]);
                 }
             }
         }

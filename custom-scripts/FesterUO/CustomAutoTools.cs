@@ -5,6 +5,11 @@ using Server.Engines.Harvest;
 using Server.Items;
 using Server.Mobiles;
 using Server.Targeting;
+using Server.Gumps;
+using Server.Network;
+using Server.Commands;
+using Server.ContextMenus;
+using Server.Engines.Quests;
 
 namespace Server.Custom
 {
@@ -17,6 +22,25 @@ namespace Server.Custom
         public static void Initialize()
         {
             EventSink.ResourceHarvestSuccess += OnResourceHarvestSuccess;
+            CommandSystem.Register("FishFilter", AccessLevel.Player, OnFishFilterCommand);
+            CommandSystem.Register("FilletFilter", AccessLevel.Player, OnFishFilterCommand);
+        }
+
+        private static void OnFishFilterCommand(CommandEventArgs e)
+        {
+            Mobile from = e.Mobile;
+            if (from == null)
+                return;
+
+            FestersFishingPole pole = FestersFishingPole.FindPole(from);
+            if (pole == null)
+            {
+                from.SendMessage(38, "You must have a Master Angler's Rod equipped or in your backpack to configure the fillet filter.");
+                return;
+            }
+
+            from.CloseGump(typeof(FestersFishFilterGump));
+            from.SendGump(new FestersFishFilterGump(from, pole));
         }
 
         private static void OnResourceHarvestSuccess(ResourceHarvestSuccessEventArgs e)
@@ -32,9 +56,9 @@ namespace Server.Custom
             {
                 FestersHatchet.ProcessLogs(e.Harvester);
             }
-            else if (e.Tool is FestersFishingPole)
+            else if (e.Tool is FestersFishingPole pole)
             {
-                FestersFishingPole.ProcessFish(e.Harvester);
+                pole.ProcessFish(e.Harvester);
             }
         }
     }
@@ -200,6 +224,22 @@ namespace Server.Custom
     // =========================================================================
     public class FestersFishingPole : FishingPole
     {
+        private bool m_AutoProtectQuestFish = true;
+        private HashSet<string> m_ProtectedFish = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool AutoProtectQuestFish
+        {
+            get => m_AutoProtectQuestFish;
+            set => m_AutoProtectQuestFish = value;
+        }
+
+        public HashSet<string> ProtectedFish
+        {
+            get => m_ProtectedFish;
+            set => m_ProtectedFish = value ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
         [Constructable]
         public FestersFishingPole() : base()
         {
@@ -213,32 +253,63 @@ namespace Server.Custom
         public override void OnSingleClick(Mobile from)
         {
             base.OnSingleClick(from);
-            LabelTo(from, "[Indestructible & Auto-Fillet]", 68);
+
+            int count = m_ProtectedFish != null ? m_ProtectedFish.Count : 0;
+            if (m_AutoProtectQuestFish && count > 0)
+                LabelTo(from, $"[Auto-Fillet: Quest Protected + {count} Exempt]", 68);
+            else if (m_AutoProtectQuestFish)
+                LabelTo(from, "[Auto-Fillet: Quest Protected]", 68);
+            else if (count > 0)
+                LabelTo(from, $"[Auto-Fillet: {count} Exempt]", 68);
+            else
+                LabelTo(from, "[Indestructible & Auto-Fillet]", 68);
+        }
+
+        public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
+        {
+            base.GetContextMenuEntries(from, list);
+
+            if (from.Alive && (IsChildOf(from.Backpack) || Parent == from))
+            {
+                list.Add(new ConfigureFishFilterEntry(this, from));
+            }
         }
 
         public override void OnDoubleClick(Mobile from)
         {
-            ProcessFish(from);
+            ProcessFish(from, this);
             base.OnDoubleClick(from);
         }
 
-        public static void ProcessFish(Mobile from)
+        public void ProcessFish(Mobile from)
+        {
+            ProcessFish(from, this);
+        }
+
+        public static void ProcessFish(Mobile from, FestersFishingPole pole)
         {
             if (from?.Backpack == null)
                 return;
 
-            // Turn raw whole fish into clean fish steaks
-            List<Item> fishList = new List<Item>();
+            List<Item> toFillet = new List<Item>();
+            int preservedCount = 0;
+
             foreach (Item item in from.Backpack.Items)
             {
                 if (item is Fish || item is BaseFish || item is BigFish ||
                     (item is BaseHighseasFish && !(item is RareFish) && !(item is BaseCrabAndLobster)))
                 {
-                    fishList.Add(item);
+                    if (pole != null && pole.IsProtected(from, item))
+                    {
+                        preservedCount += item.Amount;
+                        continue;
+                    }
+
+                    toFillet.Add(item);
                 }
             }
 
-            foreach (Item found in fishList)
+            foreach (Item found in toFillet)
             {
                 int steaksCount = found.Amount * 4;
                 found.Delete();
@@ -246,6 +317,11 @@ namespace Server.Custom
                 RawFishSteak steaks = new RawFishSteak(steaksCount);
                 FestersResourceSatchel.Deposit(from, steaks);
                 from.SendMessage(68, $"You reel in a catch and stow {steaksCount} clean raw fish steaks.");
+            }
+
+            if (preservedCount > 0)
+            {
+                from.SendMessage(53, $"Preserved {preservedCount} whole fish according to your fillet filter.");
             }
 
             // Clean up soggy shoes or junk boots caught on the line
@@ -264,9 +340,110 @@ namespace Server.Custom
             }
         }
 
+        public bool IsProtected(Mobile from, Item item)
+        {
+            if (item == null)
+                return false;
+
+            Type t = item.GetType();
+
+            if (m_AutoProtectQuestFish && IsQuestFish(from, t))
+                return true;
+
+            if (m_ProtectedFish != null && (m_ProtectedFish.Contains(t.Name) || m_ProtectedFish.Contains(t.FullName)))
+                return true;
+
+            return false;
+        }
+
+        public static bool IsQuestFish(Mobile from, Type fishType)
+        {
+            if (fishType == null)
+                return false;
+
+            if (from is PlayerMobile pm && pm.Quests != null)
+            {
+                for (int i = 0; i < pm.Quests.Count; i++)
+                {
+                    if (pm.Quests[i] is ProfessionalFisherQuest quest && quest.Objectives != null && quest.Objectives.Count > 0)
+                    {
+                        if (quest.Objectives[0] is FishQuestObjective obj && obj.Line != null)
+                        {
+                            if (obj.Line.TryGetValue(fishType, out int[] counts))
+                            {
+                                if (counts != null && counts.Length >= 2 && counts[0] < counts[1])
+                                    return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static FestersFishingPole FindPole(Mobile from)
+        {
+            if (from == null)
+                return null;
+
+            if (from.FindItemOnLayer(Layer.OneHanded) is FestersFishingPole equipped1)
+                return equipped1;
+
+            if (from.FindItemOnLayer(Layer.TwoHanded) is FestersFishingPole equipped2)
+                return equipped2;
+
+            if (from.Backpack != null)
+                return from.Backpack.FindItemByType<FestersFishingPole>();
+
+            return null;
+        }
+
         public FestersFishingPole(Serial serial) : base(serial) { }
-        public override void Serialize(GenericWriter writer) => base.Serialize(writer);
-        public override void Deserialize(GenericReader reader) => base.Deserialize(reader);
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(1); // version
+
+            writer.Write(m_AutoProtectQuestFish);
+            writer.Write(m_ProtectedFish != null ? m_ProtectedFish.Count : 0);
+            if (m_ProtectedFish != null)
+            {
+                foreach (string fish in m_ProtectedFish)
+                {
+                    writer.Write(fish);
+                }
+            }
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            m_ProtectedFish = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            m_AutoProtectQuestFish = true;
+
+            if (reader.End())
+                return; // Legacy version 0
+
+            int version = reader.ReadInt();
+            switch (version)
+            {
+                case 1:
+                {
+                    m_AutoProtectQuestFish = reader.ReadBool();
+                    int count = reader.ReadInt();
+                    for (int i = 0; i < count; i++)
+                    {
+                        string s = reader.ReadString();
+                        if (!string.IsNullOrEmpty(s))
+                            m_ProtectedFish.Add(s);
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     // =========================================================================
@@ -479,5 +656,349 @@ namespace Server.Custom
         public FestersScythe(Serial serial) : base(serial) { }
         public override void Serialize(GenericWriter writer) => base.Serialize(writer);
         public override void Deserialize(GenericReader reader) => base.Deserialize(reader);
+    }
+
+    // =========================================================================
+    // CONTEXT MENU: CONFIGURE FISH FILTER
+    // =========================================================================
+    public class ConfigureFishFilterEntry : ContextMenuEntry
+    {
+        private readonly FestersFishingPole m_Pole;
+        private readonly Mobile m_From;
+
+        public ConfigureFishFilterEntry(FestersFishingPole pole, Mobile from) : base(6103)
+        {
+            m_Pole = pole;
+            m_From = from;
+        }
+
+        public override void OnClick()
+        {
+            if (m_From == null || m_Pole == null || m_Pole.Deleted)
+                return;
+
+            m_From.CloseGump(typeof(FestersFishFilterGump));
+            m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole));
+        }
+    }
+
+    // =========================================================================
+    // FISH FILLET FILTER GUMP
+    // Interactive gump for exempting specific fish and quest fish from auto-fillet
+    // =========================================================================
+    public class FestersFishFilterGump : Gump
+    {
+        public enum ActionButton
+        {
+            Cancel = 0,
+            Save = 1,
+            TabDeepWater = 10,
+            TabShore = 11,
+            TabDungeon = 12,
+            TabCommon = 13,
+            SelectAllTab = 20,
+            DeselectAllTab = 21,
+            ProtectCurrentQuest = 22,
+            ClearAll = 23
+        }
+
+        private static readonly Type[] DeepWaterFishList = BaseHighseasFish.DeepWaterFish;
+        private static readonly Type[] ShoreFishList = BaseHighseasFish.ShoreFish;
+        private static readonly Type[] DungeonFishList = BaseHighseasFish.DungeonFish;
+        private static readonly Type[] CommonFishList = new Type[] { typeof(Fish), typeof(BigFish) };
+
+        private readonly Mobile m_From;
+        private readonly FestersFishingPole m_Pole;
+        private readonly int m_Tab;
+        private readonly bool m_AutoProtect;
+        private readonly HashSet<string> m_Selected;
+
+        public FestersFishFilterGump(Mobile from, FestersFishingPole pole)
+            : this(from, pole, 0, pole?.AutoProtectQuestFish ?? true, pole?.ProtectedFish != null ? new HashSet<string>(pole.ProtectedFish, StringComparer.OrdinalIgnoreCase) : new HashSet<string>(StringComparer.OrdinalIgnoreCase))
+        {
+        }
+
+        public FestersFishFilterGump(Mobile from, FestersFishingPole pole, int tab, bool autoProtect, HashSet<string> selected)
+            : base(100, 80)
+        {
+            m_From = from;
+            m_Pole = pole;
+            m_Tab = Math.Max(0, Math.Min(tab, 3));
+            m_AutoProtect = autoProtect;
+            m_Selected = selected ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            Closable = true;
+            Draggable = true;
+            Resizable = false;
+
+            BuildGump();
+        }
+
+        private void BuildGump()
+        {
+            AddPage(0);
+
+            // Outer Frame (Stone / Parchment)
+            AddBackground(0, 0, 560, 510, 9270);
+            AddImageTiled(11, 10, 538, 490, 2624);
+            AddAlphaRegion(11, 10, 538, 490);
+
+            // Title Header
+            AddHtml(20, 15, 520, 22, "<center><basefont color=#E6C229 size=5><b>Master Angler's Fillet Filter</b></basefont></center>", false, false);
+            AddHtml(20, 38, 520, 18, "<center><basefont color=#BBBBBB>Select fish species to preserve whole in your backpack (exempt from auto-filleting).</basefont></center>", false, false);
+
+            // Active Fishmonger Quest Summary Box
+            AddImageTiled(20, 58, 520, 36, 9274);
+            AddAlphaRegion(20, 58, 520, 36);
+
+            Dictionary<Type, int[]> questTargets = GetActiveQuestTargets(m_From);
+            if (questTargets.Count > 0)
+            {
+                List<string> entries = new List<string>();
+                foreach (KeyValuePair<Type, int[]> kvp in questTargets)
+                {
+                    string name = FormatFishName(kvp.Key);
+                    entries.Add($"{name} ({kvp.Value[0]}/{kvp.Value[1]})");
+                }
+                string questSummary = string.Join(", ", entries);
+                AddHtml(25, 62, 510, 28, $"<basefont color=#66FF66><b>Active Fishmonger Order:</b></basefont> <basefont color=#FFFFCC>{questSummary}</basefont>", false, false);
+            }
+            else
+            {
+                AddHtml(25, 67, 510, 20, "<basefont color=#888888><i>No active Fishmonger quest found in quest log.</i></basefont>", false, false);
+            }
+
+            // Auto-Protect Quest Fish Checkbox
+            AddCheck(22, 100, 0xD2, 0xD3, m_AutoProtect, 1);
+            AddLabel(46, 98, 1152, "Auto-Protect Active Fishmonger Quest Targets (Always Keep Whole)");
+
+            // Tab Navigation Bar
+            string[] tabLabels = new string[] { $"Deep Water ({DeepWaterFishList.Length})", $"Shore ({ShoreFishList.Length})", $"Dungeon ({DungeonFishList.Length})", $"Common ({CommonFishList.Length})" };
+            int[] tabX = new int[] { 22, 160, 285, 420 };
+
+            for (int t = 0; t < tabLabels.Length; t++)
+            {
+                int x = tabX[t];
+                int y = 125;
+                if (m_Tab == t)
+                {
+                    AddImage(x, y, 4006); // pressed state
+                    AddLabel(x + 35, y, 68, tabLabels[t]); // cyan highlight
+                }
+                else
+                {
+                    AddButton(x, y, 4005, 4007, (int)ActionButton.TabDeepWater + t, GumpButtonType.Reply, 0);
+                    AddLabel(x + 35, y, 1152, tabLabels[t]);
+                }
+            }
+
+            // Fish Checkbox Grid (2 Columns, up to 9 rows)
+            Type[] currentList = GetCurrentFishList(m_Tab);
+            int startY = 155;
+            for (int i = 0; i < currentList.Length; i++)
+            {
+                Type fishType = currentList[i];
+                int col = i % 2;
+                int row = i / 2;
+                int itemX = col == 0 ? 30 : 290;
+                int itemY = startY + (row * 24);
+                int switchID = 100 + i;
+
+                bool isChecked = m_Selected.Contains(fishType.Name);
+                AddCheck(itemX, itemY, 0xD2, 0xD3, isChecked, switchID);
+
+                bool isQuest = questTargets.ContainsKey(fishType);
+                string displayName = FormatFishName(fishType);
+                int hue;
+
+                if (isQuest)
+                {
+                    int[] counts = questTargets[fishType];
+                    displayName += $" [Quest {counts[0]}/{counts[1]}]";
+                    hue = 53; // Gold
+                }
+                else if (isChecked)
+                {
+                    hue = 68; // Cyan
+                }
+                else
+                {
+                    hue = 1152; // White
+                }
+
+                AddLabel(itemX + 26, itemY, hue, displayName);
+            }
+
+            // Quick Action Buttons
+            AddButton(25, 385, 4005, 4007, (int)ActionButton.SelectAllTab, GumpButtonType.Reply, 0);
+            AddLabel(60, 385, 1152, "Check Tab");
+
+            AddButton(155, 385, 4005, 4007, (int)ActionButton.DeselectAllTab, GumpButtonType.Reply, 0);
+            AddLabel(190, 385, 1152, "Uncheck Tab");
+
+            AddButton(290, 385, 4005, 4007, (int)ActionButton.ProtectCurrentQuest, GumpButtonType.Reply, 0);
+            AddLabel(325, 385, 53, "Protect Active Quest");
+
+            AddButton(460, 385, 4005, 4007, (int)ActionButton.ClearAll, GumpButtonType.Reply, 0);
+            AddLabel(495, 385, 38, "Clear All");
+
+            // Separator Line
+            AddImageTiled(20, 418, 520, 2, 9274);
+
+            // Summary Status
+            AddHtml(25, 426, 510, 20, $"<basefont color=#AAAAAA>Currently preserving <b><basefont color=#66FF66>{m_Selected.Count}</basefont></b> manual exemptions. Checked fish will not be filleted.</basefont>", false, false);
+
+            // Bottom Action Buttons
+            AddButton(150, 455, 4005, 4007, (int)ActionButton.Save, GumpButtonType.Reply, 0);
+            AddLabel(185, 455, 68, "Save & Apply");
+
+            AddButton(330, 455, 4005, 4007, (int)ActionButton.Cancel, GumpButtonType.Reply, 0);
+            AddLabel(365, 455, 38, "Cancel");
+        }
+
+        public override void OnResponse(NetState sender, RelayInfo info)
+        {
+            if (m_From == null || m_Pole == null || m_Pole.Deleted)
+                return;
+
+            int buttonID = info.ButtonID;
+            if (buttonID == (int)ActionButton.Cancel)
+                return;
+
+            // Harvest the current page state
+            bool autoProtect = info.IsSwitched(1);
+            Type[] currentList = GetCurrentFishList(m_Tab);
+            for (int i = 0; i < currentList.Length; i++)
+            {
+                Type type = currentList[i];
+                if (info.IsSwitched(100 + i))
+                {
+                    m_Selected.Add(type.Name);
+                }
+                else
+                {
+                    m_Selected.Remove(type.Name);
+                }
+            }
+
+            switch ((ActionButton)buttonID)
+            {
+                case ActionButton.Save:
+                {
+                    m_Pole.AutoProtectQuestFish = autoProtect;
+                    m_Pole.ProtectedFish = new HashSet<string>(m_Selected, StringComparer.OrdinalIgnoreCase);
+                    m_From.SendMessage(68, $"Fillet filter saved: {m_Selected.Count} fish species exempted from auto-filleting. Auto-protect quest targets: {(autoProtect ? "ENABLED" : "DISABLED")}.");
+                    break;
+                }
+                case ActionButton.TabDeepWater:
+                case ActionButton.TabShore:
+                case ActionButton.TabDungeon:
+                case ActionButton.TabCommon:
+                {
+                    int newTab = buttonID - (int)ActionButton.TabDeepWater;
+                    m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole, newTab, autoProtect, m_Selected));
+                    break;
+                }
+                case ActionButton.SelectAllTab:
+                {
+                    foreach (Type t in currentList)
+                    {
+                        m_Selected.Add(t.Name);
+                    }
+                    m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole, m_Tab, autoProtect, m_Selected));
+                    break;
+                }
+                case ActionButton.DeselectAllTab:
+                {
+                    foreach (Type t in currentList)
+                    {
+                        m_Selected.Remove(t.Name);
+                    }
+                    m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole, m_Tab, autoProtect, m_Selected));
+                    break;
+                }
+                case ActionButton.ProtectCurrentQuest:
+                {
+                    Dictionary<Type, int[]> targets = GetActiveQuestTargets(m_From);
+                    int added = 0;
+                    foreach (Type t in targets.Keys)
+                    {
+                        if (m_Selected.Add(t.Name))
+                            added++;
+                    }
+                    m_From.SendMessage(53, added > 0 ? $"Added {added} active quest fish to your exemption filter." : "Active quest fish are already in your filter.");
+                    m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole, m_Tab, autoProtect, m_Selected));
+                    break;
+                }
+                case ActionButton.ClearAll:
+                {
+                    m_Selected.Clear();
+                    m_From.SendMessage(38, "Cleared all manual fish exemptions.");
+                    m_From.SendGump(new FestersFishFilterGump(m_From, m_Pole, m_Tab, autoProtect, m_Selected));
+                    break;
+                }
+            }
+        }
+
+        private static Type[] GetCurrentFishList(int tab)
+        {
+            switch (tab)
+            {
+                case 0: return DeepWaterFishList;
+                case 1: return ShoreFishList;
+                case 2: return DungeonFishList;
+                case 3: return CommonFishList;
+                default: return DeepWaterFishList;
+            }
+        }
+
+        public static Dictionary<Type, int[]> GetActiveQuestTargets(Mobile from)
+        {
+            Dictionary<Type, int[]> dict = new Dictionary<Type, int[]>();
+
+            if (from is PlayerMobile pm && pm.Quests != null)
+            {
+                for (int i = 0; i < pm.Quests.Count; i++)
+                {
+                    if (pm.Quests[i] is ProfessionalFisherQuest quest && quest.Objectives != null && quest.Objectives.Count > 0)
+                    {
+                        if (quest.Objectives[0] is FishQuestObjective obj && obj.Line != null)
+                        {
+                            foreach (KeyValuePair<Type, int[]> kvp in obj.Line)
+                            {
+                                if (!dict.ContainsKey(kvp.Key))
+                                    dict[kvp.Key] = new int[] { kvp.Value[0], kvp.Value[1] };
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dict;
+        }
+
+        public static string FormatFishName(Type type)
+        {
+            if (type == null)
+                return "Unknown";
+
+            if (type == typeof(Fish))
+                return "Ordinary Fish";
+
+            if (type == typeof(BigFish))
+                return "Big Fish";
+
+            string name = type.Name;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < name.Length; i++)
+            {
+                if (i > 0 && char.IsUpper(name[i]) && (!char.IsUpper(name[i - 1]) || (i + 1 < name.Length && !char.IsUpper(name[i + 1]))))
+                {
+                    sb.Append(' ');
+                }
+                sb.Append(name[i]);
+            }
+            return sb.ToString();
+        }
     }
 }

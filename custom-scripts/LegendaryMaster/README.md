@@ -86,7 +86,7 @@ ExtraTimeMinutes=20
 # --- Kill Counts & Difficulty Scaling ---
 BaseMinKills=1
 BaseMaxKills=1
-KillsPerTier=0
+KillsPerTier=1
 
 # --- Skill Progression Limits ---
 MinSkillRequired=100.0

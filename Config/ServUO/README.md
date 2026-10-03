@@ -15,7 +15,7 @@ This directory (`servuo/Config/ServUO/`) contains the base ServUO platform confi
 | [`DataPath.cfg`](DataPath.cfg) | `DataPath` | Sets `CustomPath=/server/Client` to mount client UOP/MUL asset files. |
 | [`Expansion.cfg`](Expansion.cfg) | `Expansion` | Active expansion set to `CurrentExpansion=TOL` (Time of Legends). |
 | [`General.cfg`](General.cfg) | `General` | Felucca red restriction toggles and ground item decay intervals (`DefaultItemDecayTime=60`). |
-| [`Housing.cfg`](Housing.cfg) | `Housing` | Sets `AccountHouseLimit=1`. |
+| [`Housing.cfg`](Housing.cfg) | `Housing` | Sets `AccountHouseLimit=1`, disables unrefreshed house/boat decay (`DecayEnabled=False`), and allows unlimited active deployed ships (`MaxDeployedShips=0`). |
 | [`Loot.cfg`](Loot.cfg) | `Loot` | Enables `CanPOFJewelry=True` and configures Felucca luck bonus (+1000). |
 | [`PlayerCaps.cfg`](PlayerCaps.cfg) | `PlayerCaps` | Total stat cap (900), individual caps (250 base, 300 max), total skill cap (2400.0%), anti-macro disabled, and immediate stat gain. |
 | [`Server.cfg`](Server.cfg) | `Server` | Shard name `FesterUO`, port `2593`, and Docker host LAN routing (`PrivateAddress=192.168.86.48`). |

@@ -72,6 +72,7 @@ A helper script is provided in `servuo/manage-patches.sh` to maintain and test p
 | [`27-hunter-bestiary.patch`](27-hunter-bestiary.patch) | `Scripts/Mobiles/Normal/BaseCreature.cs` | Combat & Progression | Hooks `BaseCreature.OnBeforeDamage` with `OnCreatureDamageHook` delegate to apply +20% damage mastery bonuses from unlocked Hunter's Bestiary treatises. |
 | [`28-dyes-target-handler.patch`](28-dyes-target-handler.patch) | `Scripts/Items/Internal/ItemInterfaces.cs`<br>`Scripts/Items/Tools/Dyes.cs` | Custom Items & Dyeing | Defines `IDyesTargetHandler` and hooks `Dyes.cs` to route dye actions into custom dye tubs (such as `RunebookCustomDyeTub` and `SpellbookCustomDyeTub`) before standard hue pickers. |
 | [`29-loot-filter.patch`](29-loot-filter.patch) | `Scripts/Mobiles/PlayerMobile.cs` | Custom Items & Visibility | Adds `LootFilterCheck` delegate to `PlayerMobile.CanSee(Item item)` to evaluate player-side ARPG loot visibility rules on ground and corpse items. |
+| [`30-deployed-ship-limit.patch`](30-deployed-ship-limit.patch) | `Scripts/Multis/Boats/BaseBoat.cs`<br>`Scripts/Multis/Boats/BaseBoatDeed.cs`<br>`Scripts/Multis/Boats/BaseDockedBoat.cs`<br>`Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs` | Seafaring & Ships | Parameterizes active deployed ship limit per character via `Config/ServUO/Housing.cfg` (`MaxDeployedShips=0` for unlimited), and improves ship resolution for Fishmonger and dock masters to prioritize the closest vessel on the current map. |
 
 
 ---

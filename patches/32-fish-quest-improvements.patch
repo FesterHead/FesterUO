@@ -1,0 +1,208 @@
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
+index da42cff3..2b8a74e1 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishMonger.cs
+@@ -47,7 +47,8 @@ namespace Server.Mobiles
+                 SayTo(player, 1116514); //Bring yer ship around, I might have some work for ye!);
+             else
+             {
+-                bool inRange = InRange(boat.Location, distance) && boat.Map == this.Map;
++                bool requireNearby = Config.Get("Expansion.FishQuestRequireNearbyBoat", false);
++                bool inRange = !requireNearby || (InRange(boat.Location, distance) && boat.Map == this.Map);
+ 
+                 if (!FishQuestHelper.HasFishQuest(player, this, inRange))
+                 {
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
+index 2def7d40..9f018e3a 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
+@@ -378,8 +378,15 @@ namespace Server.Engines.Quests
+ 
+                     if (quest.Completed)
+                     {
+-                        quest.OnCompleted();
+-                        player.SendGump(new MondainQuestGump(quest, MondainQuestGump.Section.Complete, false, true));
++                        if (Config.Get("Expansion.FishQuestAutoComplete", true))
++                        {
++                            quest.GiveRewards();
++                        }
++                        else
++                        {
++                            quest.OnCompleted();
++                            player.SendGump(new MondainQuestGump(quest, MondainQuestGump.Section.Complete, false, true));
++                        }
+                     }
+                     else
+                     {
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
+index b29bfa50..6999a9b2 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestObjective.cs
+@@ -52,14 +52,22 @@ namespace Server.Engines.Quests
+                     if (item.GetType() == kvp.Key)
+                     {
+                         kvp.Value[0] += item.Amount;
+ 
+-                        if (IsCompleted && Quest.Owner != null)
++                        if (IsCompleted && Quest != null && Quest.Owner != null)
+                         {
+                             CurProgress = 500;
+-                            Quest.Owner.SendLocalizedMessage(1072273, null, 0x23); // You've completed a quest!  Don't forget to collect your reward.							
+-                            Quest.Owner.SendSound(Quest.CompleteSound);
++
++                            if (Config.Get("Expansion.FishQuestAutoComplete", true))
++                            {
++                                Quest.Owner.SendSound(Quest.CompleteSound);
++                                Quest.Owner.SendMessage(0x35, "Your fishing order has been filled and completed! Your reward has been placed in your backpack.");
++                                Timer.DelayCall(TimeSpan.Zero, Quest.GiveRewards);
++                            }
++                            else
++                            {
++                                Quest.Owner.SendLocalizedMessage(1072273, null, 0x23); // You've completed a quest!  Don't forget to collect your reward.							
++                                Quest.Owner.SendSound(Quest.CompleteSound);
++                            }
+                         }
+-                        else
++                        else if (Quest != null && Quest.Owner != null)
+                             Quest.Owner.SendSound(Quest.UpdateSound);
+ 
+                         return true;
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
+index 32549d5c..85dfca93 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ProfessionalFisherQuest.cs
+@@ -90,17 +90,32 @@ namespace Server.Engines.Quests
+         public override void OnAccept()
+         {
+-            if (m_Boat == null)
++            if (m_Boat == null || m_Boat.Deleted)
++                m_Boat = FishQuestHelper.GetBoat(Owner);
++
++            if (m_Boat == null || m_Boat.Deleted)
+             {
++                if (Owner != null)
++                    Owner.SendMessage("You must have a boat deployed in the world to accept this quest.");
++
+                 RemoveQuest(false);
+                 return;
+             }
+ 
++            Container hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
++
++            if (hold == null)
++            {
++                if (Owner != null)
++                    Owner.SendMessage("Your boat hold could not be found.");
++
++                RemoveQuest(false);
++                return;
++            }
++
+             m_Crate = new ShippingCrate(this);
+-
+-            if (m_Boat is BaseGalleon)
+-                ((BaseGalleon)m_Boat).GalleonHold.DropItem(m_Crate);
+-            else
+-                m_Boat.Hold.DropItem(m_Crate);
++            hold.DropItem(m_Crate);
++
++            if (Owner != null)
++                Owner.SendMessage(0x35, "A shipping crate has been placed in your boat's hold.");
+ 
+             base.OnAccept();
+         }
+@@ -191,6 +206,8 @@ namespace Server.Engines.Quests
+             Container hold = null;
+             if (m_Crate.RootParent is Container)
+                 hold = (Container)m_Crate.RootParent;
++            else if (m_Boat != null)
++                hold = m_Boat is BaseGalleon ? ((BaseGalleon)m_Boat).GalleonHold : (Container)m_Boat.Hold;
+ 
+             //Deletes quest reqeust
+             FishQuestObjective obj = GetObjective();
+@@ -200,10 +217,12 @@ namespace Server.Engines.Quests
+                     m_Crate.ConsumeTotal(kvp.Key, kvp.Value[1]);
+             }
+ 
+-            //then moves any extras to the hold
+-            if (hold != null)
++            //then moves any extras to the hold (or backpack if hold unavailable)
+             foreach (Item item in new List<Item>(m_Crate.Items))
+-                    hold.DropItem(item);
++            {
++                if (hold != null)
++                    hold.DropItem(item);
++                else if (Owner != null)
++                    Owner.PlaceInBackpack(item);
++            }
+ 
+             if (m_Crate != null)
+                 m_Crate.Delete();
+@@ -234,7 +253,10 @@ namespace Server.Engines.Quests
+             g.AddHtmlLocalized(98, 140, 312, 16, 1049073, 0x2710, false, false); // Objective:
+ 
+             g.AddHtmlLocalized(98, 160, 312, 16, 1116509, 0x15F90, false, false); //Fill the crate on your ship with the correct fish.
+-            g.AddHtmlLocalized(98, 176, 312, 16, 1116518, 0x15F90, false, false); //Speak with the fishmonger at the port of delivery.
++            if (Config.Get("Expansion.FishQuestAutoComplete", true))
++                g.AddHtml(98, 176, 312, 16, "<basefont color=#15F90>The order will automatically complete once filled.", false, false);
++            else
++                g.AddHtmlLocalized(98, 176, 312, 16, 1116518, 0x15F90, false, false); //Speak with the fishmonger at the port of delivery.
+ 
+             return true;
+         }
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
+index edfcbfa1..a2813ec7 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/ShippingCrate.cs
+@@ -76,12 +76,19 @@ namespace Server.Items
+                 loc++;
+             }
+ 
+-            object delivery = GetDeliveryInfo();
+-
+-            if (delivery is string)
+-                list.Add((string)delivery);
++            if (Config.Get("Expansion.FishQuestAutoComplete", true))
++            {
++                list.Add("Automated Delivery: Fulfills when filled");
++            }
+             else
+-                list.Add((int)delivery);
++            {
++                object delivery = GetDeliveryInfo();
++
++                if (delivery is string)
++                    list.Add((string)delivery);
++                else
++                    list.Add((int)delivery);
++            }
+ 
+             list.Add(1076255); //NO-TRADE
+ 
+@@ -183,6 +190,23 @@ namespace Server.Items
+             return false;
+         }
+ 
++        public override bool TryDropItem(Mobile from, Item dropped, bool sendFullMessage)
++        {
++            if (dropped is BaseHighseasFish && Quest != null)
++            {
++                FishQuestObjective obj = Quest.GetObjective();
++
++                if (obj != null && obj.CheckLift(dropped) && base.TryDropItem(from, dropped, sendFullMessage))
++                {
++                    obj.Update(dropped);
++                    InvalidateProperties();
++                    return true;
++                }
++            }
++
++            if (sendFullMessage)
++                from.SendLocalizedMessage(1116461); // This is not needed to fill the order.
++
++            return false;
++        }
++
+         public override bool CheckLift(Mobile from, Item item, ref LRReason reject)
+         {
+             if (Quest == null)

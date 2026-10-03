@@ -13,7 +13,7 @@ This directory (`servuo/Config/ServUO/`) contains the base ServUO platform confi
 | [`AutoSave.cfg`](AutoSave.cfg) | `AutoSave` | World save interval (15 minutes) and quiet save warnings. |
 | [`Champions.cfg`](Champions.cfg) | `Champions` | Duo-scaled kill counts (64/32/16/8 per tier) and 2 Power/Stat scrolls per boss kill. |
 | [`DataPath.cfg`](DataPath.cfg) | `DataPath` | Sets `CustomPath=/server/Client` to mount client UOP/MUL asset files. |
-| [`Expansion.cfg`](Expansion.cfg) | `Expansion` | Active expansion set to `CurrentExpansion=TOL` (Time of Legends), Arcane Circle duo focus, and direct Sea Market recall/mark enabled (`AllowSeaMarketRecall=True`). |
+| [`Expansion.cfg`](Expansion.cfg) | `Expansion` | Active expansion set to `CurrentExpansion=TOL` (Time of Legends), Arcane Circle duo focus, direct Sea Market recall/mark (`AllowSeaMarketRecall=True`), automated fishing quest fulfillment (`FishQuestAutoComplete=True`), and remote vessel quest acceptance (`FishQuestRequireNearbyBoat=False`). |
 | [`General.cfg`](General.cfg) | `General` | Felucca red restriction toggles and ground item decay intervals (`DefaultItemDecayTime=60`). |
 | [`Housing.cfg`](Housing.cfg) | `Housing` | Sets `AccountHouseLimit=1`, disables unrefreshed house/boat decay (`DecayEnabled=False`), and allows unlimited active deployed ships (`MaxDeployedShips=0`). |
 | [`Loot.cfg`](Loot.cfg) | `Loot` | Enables `CanPOFJewelry=True` and configures Felucca luck bonus (+1000). |

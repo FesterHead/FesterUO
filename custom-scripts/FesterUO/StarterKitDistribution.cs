@@ -133,7 +133,7 @@ namespace Server.Custom
         }
 
         [Usage("ClaimStarterKit")]
-        [Description("Claims starter tools, satchel, spellbook, and runebook gear if not already received.")]
+        [Description("Claims starter tools, satchel, spellbook, runebook, and universal dye tub if not already received.")]
         private static void ClaimStarterKit_OnCommand(CommandEventArgs e)
         {
             if (e.Mobile != null)
@@ -231,7 +231,10 @@ namespace Server.Custom
             };
             pack.DropItem(runebook);
 
-            // 4. Account-level one-time distribution: Boat Deed and Starter Cottage Voucher
+            // 4. Add blessed Universal Highlander Dye Tub
+            pack.DropItem(new UniversalDyeTub());
+
+            // 5. Account-level one-time distribution: Boat Deed and Starter Cottage Voucher
             // Prevents multiple characters on the same account from accumulating duplicate deeds
             bool isFirstCharacterOnAccount = false;
 

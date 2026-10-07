@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Added Universal Highlander Dye Tub ([`UniversalDyeTub.cs`](custom-scripts/FesterUO/UniversalDyeTub.cs)) and configuration in [`Config/FesterUO/UniversalDyeTub.cfg`](Config/FesterUO/UniversalDyeTub.cfg):
+  - "There can be only one": A single blessed all-in-one dye tub capable of dyeing worn and carried equipment, clothing, leather, armor, weapons, shields, jewelry, containers, backpacks, runebooks, all spellbook variants, ethereal mounts, and controlled pets.
+  - Parameterized gold cost per use (`CostPerUse=1000`) with automatic backpack and bank balance fallback deduction.
+  - Interactive 16-slot visual palette gump with dynamic multi-gradient swatch preview bars rendered from server hue tables (`Ultima.Hues`).
+  - Interactive "Customize Colors" mode allowing players to click any slot and launch a standard `HuePicker` to store customized palette colors on the tub.
+  - Seamless access via standard Dyes (hooked to [`28-dyes-target-handler.patch`](patches/28-dyes-target-handler.patch)) or context menu entry ("Set Hue").
+  - Automatically distributed to all new characters via [`StarterKitDistribution.cs`](custom-scripts/FesterUO/StarterKitDistribution.cs).
+  - Documented features and commands in [`FesterUOGuideBook.cs`](custom-scripts/FesterUO/FesterUOGuideBook.cs).
 - Added `SlowSkillGrind.cs` in `custom-scripts/FesterUO/` and configuration in `Config/FesterUO/SlowSkillGrind.cfg` allowing skills to advance past 100.0 without PowerScrolls over progressive hour-paced intervals (Tier 1 [100-105]: 6h; Tier 2 [105-110]: 12h; Tier 3 [110-115]: 18h; Tier 4 [115-120]: 24h) with persistence in `Saves/SlowSkillGrind/Persistence.bin` and player status commands `[SlowGrind` / `[SlowGrindInfo`.
 - Added fish fillet exemption filtering and interactive gump (`FestersFishFilterGump`) to `FestersFishingPole` in [`custom-scripts/FesterUO/CustomAutoTools.cs`](custom-scripts/FesterUO/CustomAutoTools.cs):
   - Provides player chat commands (`[ff`, `[FishFilter`, `[FilletFilter`) to open the interactive configuration gump directly from anywhere.
@@ -43,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed premature gump closures and setting corruption in `[LootFilter` (`LootFilterGump.cs`) caused by button ID calculations using raw bit flag enum values (`AosAttribute`, `AosWeaponAttribute`, `SAAbsorptionAttribute`). Replaced arithmetic button ID encoding with a typed index-mapped entry architecture supporting safe toggle buttons, increment/decrement adjustment arrows, direct text entry inputs, and an explicit Apply button.
 
 ### Removed
+- Removed redundant specialized dye tubs (`custom-scripts/RuneBookandSpellBookDyeTubs/`) in favor of the single unified Highlander Universal Dye Tub in `custom-scripts/FesterUO/`, which natively dyes runebooks, spellbooks, all equipment, mounts, and pets.
 - Removed `CorpseFinder.cs` and the `[Corpse` player command due to quest arrow dismissal failures and cross-dungeon map inaccuracies. Updated `FesterUOGuideBook.cs` and shard documentation accordingly.
 
 ## [1.0.0] - 2026-09-30

@@ -125,7 +125,7 @@ namespace Server.Items
                     return;
                 }
 
-                if (ts.Decoder != null && ts.Decoder != from)
+                if (ts.Decoder != null && ts.Decoder != from && !Config.Get("TreasureMaps.DecodedMapsOpenToAll", true))
                 {
                     from.SendMessage("Someone else has already deciphered this map!");
                     return;
@@ -146,7 +146,10 @@ namespace Server.Items
                 TmapBookMoongate gate = new TmapBookMoongate();
                 gate.TargetMap = ts.Facet;
 
-                ts.Decoder = from;
+                if (ts.Decoder == null)
+                {
+                    ts.Decoder = from;
+                }
 
                 int z = gate.TargetMap.GetAverageZ(ts.ChestLocation.X, ts.ChestLocation.Y);
                 Point3D p = new Point3D(ts.ChestLocation.X, ts.ChestLocation.Y, z);

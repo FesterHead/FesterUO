@@ -32,6 +32,7 @@ This directory (`servuo/custom-scripts/zerodowned/`) contains custom scripts and
 
 - **Moongate to Dig Site**: Double-click from your backpack and target a Treasure Map. Opens a 30-second timed moongate directly onto the chest coordinates (automatically calculating ground Z-elevation).
 - **Auto-Decodes Undeciphered Maps**: Targeting an un-decoded map marks it decoded by the player so you don't need to manually decipher it first.
+- **Universal Decoded Map Access**: When `DecodedMapsOpenToAll=True` in `Config/ServUO/TreasureMaps.cfg`, players can use the transporter on maps decoded by other characters without restriction.
 - **Completion Check**: Prevents opening gates to already completed/looted treasure maps.
 - **Pre-flight Validations**: Checks that the player is not criminal, overloaded, in combat, in jail, or casting a spell.
 - **Unlimited Usage**: No charges required; players can freely decode and gate to any of their treasure maps.

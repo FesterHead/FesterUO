@@ -1,0 +1,44 @@
+diff --git a/Scripts/Services/TreasureMaps/TreasureMap.cs b/Scripts/Services/TreasureMaps/TreasureMap.cs
+index 6b2ae4fb..aa965a0b 100644
+--- a/Scripts/Services/TreasureMaps/TreasureMap.cs
++++ b/Scripts/Services/TreasureMaps/TreasureMap.cs
+@@ -24,6 +24,7 @@ namespace Server.Items
+         public static bool NewChestLocations = Config.Get("TreasureMaps.Enabled", true);
+         public static double LootChance = Config.Get("TreasureMaps.LootChance", .01);
+         private static TimeSpan ResetTime = TimeSpan.FromDays(Config.Get("TreasureMaps.ResetTime", 30.0));
++        public static bool DecodedMapsOpenToAll = Config.Get("TreasureMaps.DecodedMapsOpenToAll", true);
+ 
+         #region Forgotten Treasures
+         private TreasurePackage _Package;
+@@ -1244,7 +1245,7 @@ namespace Server.Items
+                 return true;
+             }
+ 
+-            if (from == Decoder)
++            if (from == Decoder || (DecodedMapsOpenToAll && Decoder != null))
+             {
+                 Level = 1;
+                 from.SendLocalizedMessage(1046446); // This is now a level one treasure map.
+@@ -1279,6 +1280,11 @@ namespace Server.Items
+ 
+         protected virtual bool HasRequiredSkill(Mobile from)
+         {
++            if (DecodedMapsOpenToAll)
++            {
++                return true;
++            }
++
+             return (from.Skills[SkillName.Cartography].Value >= GetMinSkillLevel());
+         }
+ 
+@@ -1343,7 +1349,9 @@ namespace Server.Items
+                     }
+ 
+                     int maxRange;
+-                    double skillValue = TreasureMapInfo.NewSystem ? from.Skills[SkillName.Cartography].Value : from.Skills[SkillName.Mining].Value;
++                    double skillValue = TreasureMapInfo.NewSystem
++                        ? (DecodedMapsOpenToAll ? Math.Max(from.Skills[SkillName.Cartography].Value, from.Skills[SkillName.Mining].Value) : from.Skills[SkillName.Cartography].Value)
++                        : from.Skills[SkillName.Mining].Value;
+ 
+                     if (skillValue >= 100.0)
+                     {

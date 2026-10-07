@@ -802,8 +802,6 @@ namespace Server.Items
                 from.SendMessage(0x22, "No items in the book could be upgraded (either already max level or insufficient gold).");
             }
         }
-            }
-        }
 
         private class SetPricePrompt : Prompt
         {

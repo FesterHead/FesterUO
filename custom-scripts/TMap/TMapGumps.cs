@@ -93,8 +93,8 @@ namespace Server.Items
 
             if (canPrice)
             {
-                AddImageTiled(573, 64, 24, 352, 200);
-                AddImageTiled(493, 64, 78, 352, 1416);
+                AddImageTiled(493, 64, 52, 352, 1416);
+                AddImageTiled(547, 64, 50, 352, 200);
             }
 
             if (canDrop)
@@ -149,17 +149,21 @@ namespace Server.Items
 
             if (canPrice)
             {
-                AddHtmlLocalized(516, 64, 200, 32, 1062218, LabelColor, false, false); // Price
-
                 if (canBuy)
                 {
+                    AddHtmlLocalized(516, 64, 200, 32, 1062218, LabelColor, false, false); // Price
                     AddHtmlLocalized(576, 64, 200, 32, 1062219, LabelColor, false, false); // Buy
                 }
                 else
                 {
-                    AddHtmlLocalized(576, 64, 200, 32, 1062227, LabelColor, false, false); // Set
-                    AddButton(90, 416, 4005, 4007, 4, GumpButtonType.Reply, 0);
-                    AddHtml(95, 416, 120, 20, ColorAndCenter("FFFFFF", "Price all"), false, false); //Price All
+                    AddHtml(493, 64, 52, 32, ColorAndCenter("FFFFFF", "+1"), false, false);
+                    AddHtml(547, 64, 50, 32, ColorAndCenter("FFFFFF", "Max"), false, false);
+
+                    if (canDrop)
+                    {
+                        AddButton(70, 416, 4005, 4007, 4, GumpButtonType.Reply, 0);
+                        AddHtml(95, 416, 120, 20, ColorAndCenter("FFFFFF", "Upgrade All (+1)"), false, false);
+                    }
                 }
             }
 
@@ -167,8 +171,8 @@ namespace Server.Items
 
             if (page > 0)
             {
-                AddButton(canPrice ? 205 : 165, 416, 4014, 4016, 2, GumpButtonType.Reply, 0);
-                AddHtmlLocalized(canPrice ? 240 : 200, 416, 150, 20, 1011067, LabelColor, false, false); // Previous page
+                AddButton(canPrice ? 215 : 165, 416, 4014, 4016, 2, GumpButtonType.Reply, 0);
+                AddHtmlLocalized(canPrice ? 245 : 200, 416, 150, 20, 1011067, LabelColor, false, false); // Previous page
             }
 
             if (GetIndexForPage(page + 1) < list.Count)
@@ -194,13 +198,36 @@ namespace Server.Items
 
                     if (canDrop)
                     {
-                        AddButton(30, y + 2, 5602, 5606, 5 + (i * 2), GumpButtonType.Reply, 0);
+                        AddButton(30, y + 2, 5602, 5606, 5 + (i * 3), GumpButtonType.Reply, 0);
                     }
 
-                    if (canDrop || (canBuy && e.Price > 0))
+                    if (canBuy && e.Price > 0)
                     {
-                        AddButton(579, y + 2, 2117, 2118, 6 + (i * 2), GumpButtonType.Reply, 0);
+                        AddButton(579, y + 2, 2117, 2118, 6 + (i * 3), GumpButtonType.Reply, 0);
                         AddHtml(493, y, 78, 32, ColorAndCenter("FFFFFF", e.Price.ToString()), false, false); // Price
+                    }
+                    else if (canDrop)
+                    {
+                        bool canUp = !e.Completed && e.Level < TMapBook.MaxUpgradeLevel;
+                        bool canMax = !e.Completed && (TMapBook.MaxUpgradeLevel - e.Level > 1);
+
+                        if (canUp)
+                        {
+                            AddButton(509, y + 2, 2117, 2118, 6 + (i * 3), GumpButtonType.Reply, 0);
+                        }
+                        else
+                        {
+                            AddHtml(493, y, 52, 32, ColorAndCenter("777777", "-"), false, false);
+                        }
+
+                        if (canMax)
+                        {
+                            AddButton(562, y + 2, 2117, 2118, 7 + (i * 3), GumpButtonType.Reply, 0);
+                        }
+                        else
+                        {
+                            AddHtml(547, y, 50, 32, ColorAndCenter("777777", "-"), false, false);
+                        }
                     }
 
                     AddHtml(58, y, 66, 32, ColorAndCenter("FFFFFF", "T-Map"), false, false); // Type
@@ -217,13 +244,36 @@ namespace Server.Items
 
                     if (canDrop)
                     {
-                        AddButton(30, y + 2, 5602, 5606, 5 + (i * 2), GumpButtonType.Reply, 0);
+                        AddButton(30, y + 2, 5602, 5606, 5 + (i * 3), GumpButtonType.Reply, 0);
                     }
 
-                    if (canDrop || (canBuy && e.Price > 0))
+                    if (canBuy && e.Price > 0)
                     {
-                        AddButton(579, y + 2, 2117, 2118, 6 + (i * 2), GumpButtonType.Reply, 0);
+                        AddButton(579, y + 2, 2117, 2118, 6 + (i * 3), GumpButtonType.Reply, 0);
                         AddHtml(493, y, 78, 32, ColorAndCenter("FFFFFF", e.Price.ToString()), false, false); // Price
+                    }
+                    else if (canDrop)
+                    {
+                        bool canUp = !e.IsAncient && e.Level < TMapBook.SOSMaxUpgradeLevel;
+                        bool canMax = !e.IsAncient && (TMapBook.SOSMaxUpgradeLevel - e.Level > 1);
+
+                        if (canUp)
+                        {
+                            AddButton(509, y + 2, 2117, 2118, 6 + (i * 3), GumpButtonType.Reply, 0);
+                        }
+                        else
+                        {
+                            AddHtml(493, y, 52, 32, ColorAndCenter("777777", "-"), false, false);
+                        }
+
+                        if (canMax)
+                        {
+                            AddButton(562, y + 2, 2117, 2118, 7 + (i * 3), GumpButtonType.Reply, 0);
+                        }
+                        else
+                        {
+                            AddHtml(547, y, 50, 32, ColorAndCenter("777777", "-"), false, false);
+                        }
                     }
 
                     AddHtml(58, y, 66, 32, ColorAndCenter("FFFFFF", "SOS"), false, false); // Type
@@ -446,12 +496,12 @@ namespace Server.Items
 
                         break;
                     }
-                case 4: // Price all
+                case 4: // Upgrade All (+1)
                     {
                         if (m_Book.IsChildOf(m_From.Backpack))
                         {
-                            m_From.Prompt = new SetPricePrompt(m_Book, null, m_Page, m_List);
-                            m_From.SendMessage("Type in a price for all maps in the book:");
+                            UpgradeAll(m_From);
+                            m_From.SendGump(new TMapGump(m_From, m_Book, m_Page, m_List));
                         }
 
                         break;
@@ -463,8 +513,8 @@ namespace Server.Items
 
                         index -= 5;
 
-                        int type = index % 2;
-                        index /= 2;
+                        int action = index % 3;
+                        index /= 3;
 
                         if (index < 0 || index >= m_List.Count)
                         {
@@ -480,7 +530,7 @@ namespace Server.Items
                             break;
                         }
 
-                        if (type == 0) // Drop
+                        if (action == 0) // Drop
                         {
                             if (m_Book.IsChildOf(m_From.Backpack))
                             {
@@ -534,13 +584,12 @@ namespace Server.Items
                                 }
                             }
                         }
-                        else // Set Price | Buy
+                        else if (action == 1) // +1 Upgrade (or Buy if on vendor)
                         {
                             if (m_Book.IsChildOf(m_From.Backpack))
                             {
-                                m_From.Prompt = new SetPricePrompt(m_Book, obj, m_Page, m_List);
-
-                                m_From.SendMessage("Type in a price for the map"); // Type in a price for the map:
+                                UpgradeEntry(m_From, obj, false);
+                                m_From.SendGump(new TMapGump(m_From, m_Book, m_Page, m_List));
                             }
                             else if (m_Book.RootParent is PlayerVendor)
                             {
@@ -575,14 +624,184 @@ namespace Server.Items
                                         }
                                         else
                                         {
-                                            m_From.SendLocalizedMessage(1062381); // The book is emptz
+                                            m_From.SendLocalizedMessage(1062381); // The book is empty.
                                         }
                                     }
                                 }
                             }
                         }
+                        else if (action == 2) // Max Upgrade
+                        {
+                            if (m_Book.IsChildOf(m_From.Backpack))
+                            {
+                                UpgradeEntry(m_From, obj, true);
+                                m_From.SendGump(new TMapGump(m_From, m_Book, m_Page, m_List));
+                            }
+                        }
+
                         break;
                     }
+            }
+        }
+
+        private void UpgradeEntry(PlayerMobile from, object obj, bool maxUpgrade)
+        {
+            if (from == null || !from.Alive || obj == null || !m_Book.IsChildOf(from.Backpack))
+                return;
+
+            if (obj is TMapEntry mapEntry)
+            {
+                if (mapEntry.Completed)
+                {
+                    from.SendMessage(0x22, "That treasure map has already been completed.");
+                    return;
+                }
+
+                int maxLevel = TMapBook.MaxUpgradeLevel;
+                if (mapEntry.Level >= maxLevel)
+                {
+                    from.SendMessage(0x35, "This treasure map is already at the maximum upgrade level (Level {0}).", maxLevel);
+                    return;
+                }
+
+                int targetLevel = maxUpgrade ? maxLevel : mapEntry.Level + 1;
+                int levelsToGain = targetLevel - mapEntry.Level;
+                if (levelsToGain <= 0)
+                    return;
+
+                int cost = levelsToGain * TMapBook.UpgradeCostPerLevel;
+                int totalGold = TMapBook.GetTotalGold(from);
+
+                if (totalGold < cost)
+                {
+                    from.SendMessage(0x22, "You do not have enough gold. Upgrading to Level {0} requires {1:N0} gold (Available: {2:N0} gp).", targetLevel, cost, totalGold);
+                    from.LocalOverheadMessage(Server.Network.MessageType.Regular, 0x22, false, "Insufficient gold!");
+                    return;
+                }
+
+                if (!TMapBook.DeductGold(from, cost))
+                {
+                    from.SendMessage(0x22, "Could not withdraw gold for the upgrade.");
+                    return;
+                }
+
+                mapEntry.Level = targetLevel;
+                if (Enum.IsDefined(typeof(TreasureLevel), targetLevel))
+                {
+                    mapEntry.TreasureLevel = (TreasureLevel)targetLevel;
+                }
+
+                from.PlaySound(0x2E6); // Gold coins
+                from.PlaySound(0x249); // Map/scroll
+
+                from.SendMessage(0x35, "You have upgraded the treasure map to Level {0} for {1:N0} gold.", targetLevel, cost);
+                from.LocalOverheadMessage(Server.Network.MessageType.Regular, 0x35, false, $"Upgraded map to Level {targetLevel}!");
+            }
+            else if (obj is SOSEntry sosEntry)
+            {
+                if (sosEntry.IsAncient)
+                {
+                    from.SendMessage(0x22, "Ancient SOS messages cannot be upgraded.");
+                    return;
+                }
+
+                int maxLevel = TMapBook.SOSMaxUpgradeLevel;
+                if (sosEntry.Level >= maxLevel)
+                {
+                    from.SendMessage(0x35, "This SOS is already at the maximum upgrade level (Level {0}). Ancient SOS messages can only be found naturally.", maxLevel);
+                    return;
+                }
+
+                int targetLevel = maxUpgrade ? maxLevel : sosEntry.Level + 1;
+                if (targetLevel > maxLevel)
+                    targetLevel = maxLevel;
+
+                int levelsToGain = targetLevel - sosEntry.Level;
+                if (levelsToGain <= 0)
+                    return;
+
+                int cost = levelsToGain * TMapBook.SOSUpgradeCostPerLevel;
+                int totalGold = TMapBook.GetTotalGold(from);
+
+                if (totalGold < cost)
+                {
+                    from.SendMessage(0x22, "You do not have enough gold. Upgrading to Level {0} requires {1:N0} gold (Available: {2:N0} gp).", targetLevel, cost, totalGold);
+                    from.LocalOverheadMessage(Server.Network.MessageType.Regular, 0x22, false, "Insufficient gold!");
+                    return;
+                }
+
+                if (!TMapBook.DeductGold(from, cost))
+                {
+                    from.SendMessage(0x22, "Could not withdraw gold for the upgrade.");
+                    return;
+                }
+
+                sosEntry.Level = targetLevel;
+
+                from.PlaySound(0x2E6); // Gold coins
+                from.PlaySound(0x25);  // Water splash
+
+                from.SendMessage(0x35, "You have upgraded the SOS to Level {0} for {1:N0} gold.", targetLevel, cost);
+                from.LocalOverheadMessage(Server.Network.MessageType.Regular, 0x35, false, $"Upgraded SOS to Level {targetLevel}!");
+            }
+        }
+
+        private void UpgradeAll(PlayerMobile from)
+        {
+            if (from == null || !from.Alive || !m_Book.IsChildOf(from.Backpack))
+                return;
+
+            int upgradedCount = 0;
+            int totalCost = 0;
+
+            for (int i = 0; i < m_Book.Entries.Count; i++)
+            {
+                object obj = m_Book.Entries[i];
+                if (obj is TMapEntry mapEntry && !mapEntry.Completed && mapEntry.Level < TMapBook.MaxUpgradeLevel)
+                {
+                    int cost = TMapBook.UpgradeCostPerLevel;
+                    if (TMapBook.GetTotalGold(from) >= cost && TMapBook.DeductGold(from, cost))
+                    {
+                        mapEntry.Level++;
+                        if (Enum.IsDefined(typeof(TreasureLevel), mapEntry.Level))
+                        {
+                            mapEntry.TreasureLevel = (TreasureLevel)mapEntry.Level;
+                        }
+                        totalCost += cost;
+                        upgradedCount++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else if (obj is SOSEntry sosEntry && !sosEntry.IsAncient && sosEntry.Level < TMapBook.SOSMaxUpgradeLevel)
+                {
+                    int cost = TMapBook.SOSUpgradeCostPerLevel;
+                    if (TMapBook.GetTotalGold(from) >= cost && TMapBook.DeductGold(from, cost))
+                    {
+                        sosEntry.Level++;
+                        totalCost += cost;
+                        upgradedCount++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (upgradedCount > 0)
+            {
+                from.PlaySound(0x2E6);
+                from.SendMessage(0x35, "Upgraded {0} item(s) in book by +1 level for {1:N0} gold.", upgradedCount, totalCost);
+                from.LocalOverheadMessage(Server.Network.MessageType.Regular, 0x35, false, $"Upgraded {upgradedCount} items (+1)!");
+            }
+            else
+            {
+                from.SendMessage(0x22, "No items in the book could be upgraded (either already max level or insufficient gold).");
+            }
+        }
             }
         }
 

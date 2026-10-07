@@ -20,6 +20,11 @@ This directory (`servuo/custom-scripts/TMap/`) contains the Treasure Map and SOS
 - **Filtering & Search**: Filter entries by type (Treasure Map vs. SOS), facet, decoding status, and difficulty level.
 - **Modern ServUO Loot Support**: Seamlessly extracts modern treasure maps while retaining package type and treasure level information.
 - **Player Vendor Compatible**: Supports setting prices per map and selling directly from player vendor backpacks.
+- **In-Book Gold Sink Upgrades**: Upgrade Treasure Maps and SOS messages directly within the book UI using gold from backpack, bank, or account balance:
+  - **+1 Button**: Upgrades the entry to the next level (+1 tier) for 10,000 gp.
+  - **Max Button**: Upgrades the entry directly to the highest allowable level for 10,000 gp per level gained.
+  - **Upgrade All (+1) Button**: Convenient footer button upgrading every qualifying map and SOS in the book by +1 level in a single click.
+  - Strict preservation of natural pinnacle tiers: SOS messages cap at Level 3 (Ancient cannot be reached), and Treasure Maps cap at Level 6 (Diabolical cannot be reached).
 - **Mapmaker Vendor Available**: Sold by NPC Mapmakers across Britannia for 1,000 gold (configured via `servuo/Config/ServUO/Vendors.cfg`).
 
 ---

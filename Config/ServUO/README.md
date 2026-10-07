@@ -19,6 +19,6 @@ This directory (`Config/ServUO/`) contains the base ServUO platform configuratio
 | [`Loot.cfg`](Loot.cfg) | `Loot` | Enables `CanPOFJewelry=True` and configures Felucca luck bonus (+1000). |
 | [`PlayerCaps.cfg`](PlayerCaps.cfg) | `PlayerCaps` | Total stat cap (900), individual caps (250 base, 300 max), total skill cap (2400.0%), anti-macro disabled, and immediate stat gain. |
 | [`Server.cfg`](Server.cfg) | `Server` | Shard name `FesterUO`, port `2593`, and Docker host LAN routing (`PrivateAddress=192.168.86.48`). |
-| [`TreasureMaps.cfg`](TreasureMaps.cfg) | `TreasureMaps` | Enables modern treasure map chest system, lowers chest reset timer to 7 days, and allows any character to view, use, and dig decoded treasure maps (`DecodedMapsOpenToAll=True`). |
+| [`TreasureMaps.cfg`](TreasureMaps.cfg) | `TreasureMaps` | Enables modern treasure map chest system, lowers chest reset timer to 7 days, allows any character to use decoded treasure maps (`DecodedMapsOpenToAll=True`), and parameterizes gold upgrades for treasure maps (10k gp/lvl up to Level 6) and SOS messages (10k gp/lvl up to Level 3). |
 | [`Vendors.cfg`](Vendors.cfg) | `Vendors` | Sets NPC restock delay to 15 minutes, configures 640 commodity/reagent stock, disables restock decay, and configures Powder of Fortifying. |
 | [`VetRewards.cfg`](VetRewards.cfg) | `VetRewards` | Sets reward intervals to 30 days per tier and locks veteran skill cap bonuses to preserve caps. |

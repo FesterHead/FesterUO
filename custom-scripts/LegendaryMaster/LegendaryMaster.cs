@@ -10,13 +10,13 @@
  * Enhancements & Fixes:
  * - Fixed player kill credit: Direct player weapon/spell kills now properly count toward tasks (previously only pet/summon kills counted).
  * - Fixed fatal ArgumentOutOfRangeException: Removed invalid taskInfos[pm.Serial] list indexing on speech.
- * - Fixed reward timing: Tasks now properly reward the PowerScroll upon the final target kill (TaskAmount reaching 0).
+ * - Reward Gump & Selection: Tasks no longer require an incoming skill request; completing a trial presents an interactive gump (LegendarySkillGump) to choose the desired skill reward.
+ * - Dynamic +5 Master PowerScrolls: Awards a LegendaryPowerScroll that dynamically increases the user's skill cap to the next ceiling limit (105, 110, 115, 120) for any alt on the account, requiring 100+ skill without error or scroll consumption if unqualified.
+ * - Double-click interaction: Supports double-clicking the NPC as well as speaking "give task" / "task" / "quest".
  * - Fixed countdown display: Formatted remaining time in human-readable integer minutes instead of raw DateTime timestamps.
  * - Fixed creature name display: Displays clean creature names (e.g. "Shadow Wyrm", "Balron") instead of C# class Type names.
  * - Fixed creature selection off-by-one: Restored White Wyrm to the random selection pool.
- * - Case-insensitive & flexible speech: Recognizes "give task <skill>" case-insensitively and accepts both display and internal skill names.
- * - PowerScroll validation: Restricts tasks to valid skills defined in PowerScroll.Skills.
- * - State persistence: Added WorldSave / WorldLoad persistence so active player tasks survive server restarts.
+ * - State persistence: Added WorldSave / WorldLoad persistence so active player tasks and unclaimed completed trials survive server restarts.
  * - Externalized configuration: Time limits and bonus scroll chances are parameterized in servuo/Config/LegendaryMaster/LegendaryMaster.cfg.
  */
 
@@ -112,21 +112,20 @@ namespace Server.Custom.Misc
                 PersistencePath,
                 writer =>
                 {
-                    writer.Write(0); // version
+                    writer.Write(1); // version
 
-                    // Clean expired or completed tasks before saving
-                    m_TaskInfos.RemoveAll(t => t.Completed || t.TimeLimit <= DateTime.UtcNow);
+                    // Clean expired tasks (keep completed tasks waiting for reward selection!)
+                    m_TaskInfos.RemoveAll(t => !t.Completed && t.TimeLimit <= DateTime.UtcNow);
 
                     writer.Write(m_TaskInfos.Count);
 
                     foreach (var task in m_TaskInfos)
                     {
                         writer.Write((int)task.PlayerSerial);
-                        writer.Write((int)task.PlayerSkill);
-                        writer.Write(task.SkillCap);
                         writer.Write(task.TargetType != null ? task.TargetType.FullName : string.Empty);
                         writer.Write(task.TimeLimit);
                         writer.Write(task.TaskAmount);
+                        writer.Write(task.Completed);
                     }
                 });
         }
@@ -144,27 +143,50 @@ namespace Server.Custom.Misc
 
                     for (int i = 0; i < count; i++)
                     {
-                        Serial serial = reader.ReadInt();
-                        SkillName skill = (SkillName)reader.ReadInt();
-                        double cap = reader.ReadDouble();
-                        string typeName = reader.ReadString();
-                        DateTime timeLimit = reader.ReadDateTime();
-                        int amount = reader.ReadInt();
-
-                        Type targetType = ScriptCompiler.FindTypeByFullName(typeName);
-
-                        if (targetType != null && timeLimit > DateTime.UtcNow)
+                        if (version >= 1)
                         {
-                            m_TaskInfos.Add(new SkillTaskInfo
+                            Serial serial = reader.ReadInt();
+                            string typeName = reader.ReadString();
+                            DateTime timeLimit = reader.ReadDateTime();
+                            int amount = reader.ReadInt();
+                            bool completed = reader.ReadBool();
+
+                            Type targetType = ScriptCompiler.FindTypeByFullName(typeName);
+
+                            if (completed || (targetType != null && timeLimit > DateTime.UtcNow))
                             {
-                                PlayerSerial = serial,
-                                PlayerSkill = skill,
-                                SkillCap = cap,
-                                TargetType = targetType,
-                                TimeLimit = timeLimit,
-                                TaskAmount = amount,
-                                Completed = false
-                            });
+                                m_TaskInfos.Add(new SkillTaskInfo
+                                {
+                                    PlayerSerial = serial,
+                                    TargetType = targetType,
+                                    TimeLimit = timeLimit,
+                                    TaskAmount = amount,
+                                    Completed = completed
+                                });
+                            }
+                        }
+                        else
+                        {
+                            Serial serial = reader.ReadInt();
+                            SkillName skill = (SkillName)reader.ReadInt();
+                            double cap = reader.ReadDouble();
+                            string typeName = reader.ReadString();
+                            DateTime timeLimit = reader.ReadDateTime();
+                            int amount = reader.ReadInt();
+
+                            Type targetType = ScriptCompiler.FindTypeByFullName(typeName);
+
+                            if (targetType != null && timeLimit > DateTime.UtcNow)
+                            {
+                                m_TaskInfos.Add(new SkillTaskInfo
+                                {
+                                    PlayerSerial = serial,
+                                    TargetType = targetType,
+                                    TimeLimit = timeLimit,
+                                    TaskAmount = amount,
+                                    Completed = false
+                                });
+                            }
                         }
                     }
                 });
@@ -221,20 +243,11 @@ namespace Server.Custom.Misc
                 {
                     currentTask.Completed = true;
 
-                    double maxCap = Config.Get("LegendaryMaster.MaxSkillCap", 120.0);
-                    double scrollInc = Config.Get("LegendaryMaster.ScrollIncrement", 5.0);
-
-                    double rewardCap = currentTask.SkillCap;
-                    if (rewardCap <= 100.0 || rewardCap % scrollInc != 0)
-                    {
-                        rewardCap = Math.Min(maxCap, (Math.Floor(rewardCap / scrollInc) + 1.0) * scrollInc);
-                    }
-
-                    pm.AddToBackpack(new PowerScroll(currentTask.PlayerSkill, rewardCap));
-                    pm.SendMessage(53, $"Congratulations! You were rewarded a {rewardCap:F0} {currentTask.PlayerSkill} Powerscroll!");
+                    pm.SendMessage(53, "Congratulations! You have completed your combat trial! Choose your skill reward.");
+                    pm.CloseGump(typeof(LegendarySkillGump));
+                    pm.SendGump(new LegendarySkillGump(pm));
 
                     TryGiveStatScroll(pm);
-                    m_TaskInfos.Remove(currentTask);
                 }
                 else
                 {
@@ -325,6 +338,20 @@ namespace Server.Custom.Misc
             return true;
         }
 
+        public override void OnDoubleClick(Mobile from)
+        {
+            int range = Config.Get("LegendaryMaster.InteractionRange", 5);
+
+            if (from is PlayerMobile pm && pm.InRange(Location, range))
+            {
+                HandleTaskInteraction(pm);
+            }
+            else
+            {
+                base.OnDoubleClick(from);
+            }
+        }
+
         public override void OnSpeech(SpeechEventArgs e)
         {
             int range = Config.Get("LegendaryMaster.InteractionRange", 5);
@@ -333,96 +360,11 @@ namespace Server.Custom.Misc
             {
                 string speech = e.Speech.Trim();
 
-                if (speech.StartsWith("give task", StringComparison.OrdinalIgnoreCase))
+                if (speech.StartsWith("give task", StringComparison.OrdinalIgnoreCase) ||
+                    speech.Equals("task", StringComparison.OrdinalIgnoreCase) ||
+                    speech.Equals("quest", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (pm.IsStaff())
-                    {
-                        SayTo(pm, "I am on duty, waiting for mortal adventurers to assist!");
-                        return;
-                    }
-
-                    var existing = m_TaskInfos.FirstOrDefault(t => t.PlayerSerial == pm.Serial && !t.Completed);
-                    if (existing != null)
-                    {
-                        if (DateTime.UtcNow > existing.TimeLimit)
-                        {
-                            m_TaskInfos.Remove(existing);
-                            SayTo(pm, "Your previous task expired. You may now undertake a new quest.");
-                        }
-                        else
-                        {
-                            int remaining = Math.Max(1, (int)(existing.TimeLimit - DateTime.UtcNow).TotalMinutes);
-                            SayTo(pm, $"You already have an active task for {existing.PlayerSkill}! Kill {existing.TaskAmount} {FormatCreatureName(existing.TargetType)} ({remaining} minutes left).");
-                            return;
-                        }
-                    }
-
-                    string skillParam = speech.Substring("give task".Length).Trim();
-                    if (string.IsNullOrEmpty(skillParam))
-                    {
-                        SayTo(pm, "Please specify which skill you want a task for. Example: 'give task swordsmanship' or 'give task magery'.");
-                        return;
-                    }
-
-                    Skill targetSkill = null;
-                    foreach (var s in pm.Skills)
-                    {
-                        if (s.Name.Equals(skillParam, StringComparison.OrdinalIgnoreCase) ||
-                            s.SkillName.ToString().Equals(skillParam, StringComparison.OrdinalIgnoreCase) ||
-                            s.Name.ToLower().StartsWith(skillParam.ToLower()))
-                        {
-                            targetSkill = s;
-                            break;
-                        }
-                    }
-
-                    if (targetSkill == null)
-                    {
-                        SayTo(pm, $"I could not find a skill matching '{skillParam}'. Please check your spelling.");
-                        return;
-                    }
-
-                    if (!PowerScroll.Skills.Contains(targetSkill.SkillName))
-                    {
-                        SayTo(pm, $"Powerscrolls do not exist for {targetSkill.Name}.");
-                        return;
-                    }
-
-                    double maxCap = Config.Get("LegendaryMaster.MaxSkillCap", 120.0);
-                    double minSkill = Config.Get("LegendaryMaster.MinSkillRequired", 100.0);
-                    double scrollInc = Config.Get("LegendaryMaster.ScrollIncrement", 5.0);
-
-                    if (targetSkill.Cap >= maxCap)
-                    {
-                        if (targetSkill.Value < maxCap)
-                        {
-                            SayTo(pm, $"Your {targetSkill.Name} cap is already {targetSkill.Cap:F0}! Train your skill up before seeking mastery.");
-                        }
-                        else
-                        {
-                            SayTo(pm, $"Your {targetSkill.Name} is already at maximum ({targetSkill.Value:F0})! You're not fooling me!");
-                        }
-                        return;
-                    }
-
-                    if (targetSkill.Value < minSkill)
-                    {
-                        SayTo(pm, $"Your {targetSkill.Name} skill is too low ({targetSkill.Value:F1}). Return to me once you have reached {minSkill:F1} standing!");
-                        return;
-                    }
-
-                    if (targetSkill.Value < targetSkill.Cap)
-                    {
-                        SayTo(pm, $"You must reach your current skill cap of {targetSkill.Cap:F0} in {targetSkill.Name} before you can unlock the next tier!");
-                        return;
-                    }
-
-                    int tier = (int)Math.Max(0, (targetSkill.Cap - minSkill) / scrollInc);
-                    int minKills = Config.Get("LegendaryMaster.BaseMinKills", 1);
-                    int maxKills = Math.Max(minKills, Config.Get("LegendaryMaster.BaseMaxKills", 3) + (tier * Config.Get("LegendaryMaster.KillsPerTier", 1)));
-                    int killCount = Utility.RandomMinMax(minKills, maxKills);
-
-                    AssignTask(pm, targetSkill, GetRandomCreature(), killCount);
+                    HandleTaskInteraction(pm);
                 }
                 else if (speech.StartsWith("remove task", StringComparison.OrdinalIgnoreCase) ||
                          speech.StartsWith("cancel task", StringComparison.OrdinalIgnoreCase))
@@ -440,27 +382,59 @@ namespace Server.Custom.Misc
                 }
                 else if (Utility.RandomDouble() < Config.Get("LegendaryMaster.IdleBarkChance", 0.15))
                 {
-                    SayTo(pm, "Looking to expand your skills beyond mortal limits? Say 'give task <skill>' to receive a quest for a Powerscroll!");
+                    SayTo(pm, "Looking to expand your skills beyond mortal limits? Speak 'give task' or double-click me to undertake a combat trial for a Master Power Scroll!");
                 }
             }
 
             base.OnSpeech(e);
         }
 
-        private void AssignTask(PlayerMobile pm, Skill skill, Type target, int amount)
+        private void HandleTaskInteraction(PlayerMobile pm)
         {
-            int startMinutes = Config.Get("LegendaryMaster.TaskTimeMinutes", 60);
-            double maxCap = Config.Get("LegendaryMaster.MaxSkillCap", 120.0);
-            double scrollInc = Config.Get("LegendaryMaster.ScrollIncrement", 5.0);
+            if (pm.IsStaff())
+            {
+                SayTo(pm, "I am on duty, waiting for mortal adventurers to assist!");
+                return;
+            }
 
-            // Clean step to next tier (e.g. 100.0 -> 105.0, 100.6 -> 105.0, 105.0 -> 110.0)
-            double targetRewardCap = Math.Min(maxCap, (Math.Floor(skill.Cap / scrollInc) + 1.0) * scrollInc);
+            var existing = m_TaskInfos.FirstOrDefault(t => t.PlayerSerial == pm.Serial);
+            if (existing != null)
+            {
+                if (existing.Completed)
+                {
+                    SayTo(pm, "Your trial is complete! Select which skill you wish to reward.");
+                    pm.CloseGump(typeof(LegendarySkillGump));
+                    pm.SendGump(new LegendarySkillGump(pm));
+                    return;
+                }
+
+                if (DateTime.UtcNow > existing.TimeLimit)
+                {
+                    m_TaskInfos.Remove(existing);
+                    SayTo(pm, "Your previous task expired. You may now undertake a new quest.");
+                }
+                else
+                {
+                    int remaining = Math.Max(1, (int)(existing.TimeLimit - DateTime.UtcNow).TotalMinutes);
+                    SayTo(pm, $"You already have an active task! Kill {existing.TaskAmount} {FormatCreatureName(existing.TargetType)} ({remaining} minutes left).");
+                    return;
+                }
+            }
+
+            int minKills = Config.Get("LegendaryMaster.BaseMinKills", 1);
+            int maxKills = Math.Max(minKills, Config.Get("LegendaryMaster.BaseMaxKills", 1));
+            int killCount = Utility.RandomMinMax(minKills, maxKills);
+
+            AssignTask(pm, GetRandomCreature(), killCount);
+        }
+
+        private void AssignTask(PlayerMobile pm, Type target, int amount)
+        {
+            int startMinutes = Config.Get("LegendaryMaster.TaskTimeMinutes", 180);
 
             var info = new SkillTaskInfo
             {
                 PlayerSerial = pm.Serial,
-                PlayerSkill = skill.SkillName,
-                SkillCap = targetRewardCap,
                 TargetType = target,
                 TimeLimit = DateTime.UtcNow + TimeSpan.FromMinutes(startMinutes),
                 TaskAmount = amount,
@@ -470,7 +444,29 @@ namespace Server.Custom.Misc
             m_TaskInfos.Add(info);
 
             Effects.SendBoltEffect(pm, true);
-            SayTo(pm, $"Task assigned! Slay {amount} {FormatCreatureName(target)} within {startMinutes} minutes to earn a {targetRewardCap:F0} {skill.Name} Powerscroll!");
+            SayTo(pm, $"Task assigned! Slay {amount} {FormatCreatureName(target)} within {startMinutes} minutes to earn a Legendary Master Power Scroll (+5 Upgrade) of your choice!");
+        }
+
+        public static bool ClaimReward(PlayerMobile pm, SkillName skill)
+        {
+            var task = m_TaskInfos.FirstOrDefault(t => t.PlayerSerial == pm.Serial && t.Completed);
+            if (task == null)
+                return false;
+
+            m_TaskInfos.Remove(task);
+
+            var scroll = new LegendaryPowerScroll(skill);
+            if (!pm.PlaceInBackpack(scroll))
+            {
+                pm.BankBox.DropItem(scroll);
+                pm.SendMessage(53, $"Your backpack was full! The Legendary Master Scroll of {scroll.GetName()} was placed into your bank box.");
+            }
+            else
+            {
+                pm.SendMessage(53, $"You have received a Legendary Master Scroll of {scroll.GetName()}!");
+            }
+
+            return true;
         }
 
         private static void EventSink_SkillCapChange(SkillCapChangeEventArgs e)
@@ -526,8 +522,6 @@ namespace Server.Custom.Misc
         private class SkillTaskInfo
         {
             public Serial PlayerSerial;
-            public SkillName PlayerSkill;
-            public double SkillCap;
             public Type TargetType;
             public DateTime TimeLimit;
             public bool Completed;

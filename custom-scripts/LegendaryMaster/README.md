@@ -16,34 +16,30 @@ This directory (`servuo/custom-scripts/LegendaryMaster/`) contains the **Legenda
 ## System Overview
 
 The **Legendary Master of Skills** is an interactive questmaster NPC designed for small shards and solo adventurers as an alternative path to obtain PowerScrolls without running Champion Spawns:
-1. Players who have attained Grandmaster standing (100.0) in a supported skill may approach the Master to request a combat challenge.
-2. The Master tasks the adventurer with slaying a series of high-level dungeon bosses within an allotted countdown timer.
-3. Successfully completing the trial rewards the player with the next +5 PowerScroll tier (105, 110, 115, or 120) for that skill, plus a small chance at a bonus Stat Cap Scroll.
+1. Players approach the Master by speaking nearby or double-clicking him to undertake a combat challenge (no upfront skill name needed).
+2. The Master tasks the adventurer with slaying high-level dungeon bosses within an allotted countdown timer.
+3. Upon slaying the final target, an interactive selection gump (`LegendarySkillGump`) opens allowing the player to pick any skill to receive a **Legendary Master Power Scroll**.
+4. The awarded scroll is Blessed, transferable to other characters on the account, and dynamically advances the recipient's skill cap to the next ceiling tier (105, 110, 115, or 120), requiring 100.0+ base skill to use.
 
 ---
 
-## Player Speech Commands
+## Player Speech & Interaction Commands
 
-Players interact with the NPC by speaking nearby (within 5 tiles):
+Players interact with the NPC by double-clicking him or speaking nearby (within 5 tiles):
 
-| Spoken Command | Description | Example |
+| Interaction / Command | Description | Example |
 | :--- | :--- | :--- |
-| `give task <skill>` | Requests a new combat task for the specified skill. | `give task swordsmanship`<br>`give task magery`<br>`give task taming` |
+| Double-click NPC | Starts a new combat trial or reopens the reward selection gump if a trial was completed. | Double-click |
+| `give task`<br>`task`<br>`quest` | Requests a new combat trial (or reopens the reward selection gump). | `give task`<br>`task` |
 | `remove task`<br>`cancel task` | Abandons the currently active task so a new one can be started. | `remove task` |
 
 ---
 
 ## Quest Rules & Requirements
 
-1. **Prerequisite Skill Level**:
-   - The player must have reached at least **100.0 (Grandmaster)** in the requested skill.
-   - The player must have capped their skill at their current maximum before seeking the next tier (e.g. 100.0/100 to receive a 105 scroll; 105.0/105 to receive a 110 scroll; 110.0/110 to receive a 115 scroll; 115.0/115 to receive a 120 scroll).
-   - Once a skill cap reaches 120.0, no further tasks can be requested for that skill.
-2. **One Active Task**:
-   - Players may only have one active task at any given time across all skills.
-3. **Valid PowerScroll Skills**:
-   - Only skills that support standard UO PowerScrolls are eligible (e.g. Combat, Magic, Taming, Crafting, Bardic, Bushido, Ninjitsu, Spellweaving, Mysticism, Throwing, Imbuing).
-4. **Target Pool**:
+1. **One Active Task**:
+   - Players may only have one active task at any given time.
+2. **Target Pool**:
    - Tasks require hunting creatures randomly drawn from high-level dungeon encounters across Britannia, Ilshenar, Malas, and Tokuno (configurable in `LegendaryMaster.cfg`):
      - **Balron** (Hythloth, Abyss)
      - **Shadow Wyrm** (Destard)
@@ -60,16 +56,24 @@ Players interact with the NPC by speaking nearby (within 5 tiles):
      - **Rune Beetle** (Tokuno)
      - **Yamandon** (Tokuno)
      - **White Wyrm** (Ice Dungeon)
-5. **Time Limit & Extensions**:
-   - Tasks grant an initial countdown (default 60 minutes).
-   - Each confirmed target kill adds bonus time (default +10 minutes) to the countdown.
+3. **Time Limit & Extensions**:
+   - Tasks grant an initial countdown (default 180 minutes).
+   - Each confirmed target kill adds bonus time (default +20 minutes) to the countdown.
    - Kills qualify when performed directly by the player, their pets, or their summons.
+4. **Reward Gump & Alt Flexibility**:
+   - Completing a task immediately displays `LegendarySkillGump` categorized into 5 tabs: **Combat**, **Magic**, **Crafting** (including Fishing, Mining, Lumberjacking, Carpentry, Fletching, Tinkering, Alchemy, Cooking, Inscription, Blacksmithy, Tailoring, and Imbuing), **Wilderness**, and **Utility**.
+   - If closed prematurely, speaking to or double-clicking the Master reopens the gump.
+   - The awarded `LegendaryPowerScroll` can be transferred to any character on the player's account.
 
 ---
 
 ## Rewards
 
-- **PowerScroll**: A +5 PowerScroll matching the requested skill tier (105, 110, 115, or 120) placed directly into the player's backpack. When consumed, it instantly advances the character's base skill to the scroll level (e.g. 100.6 with a 105 scroll immediately jumps to 105.0).
+- **Legendary Master Power Scroll**: A Blessed +5 ceiling upgrade scroll for the selected skill.
+  - Requires at least 100.0 base skill to use.
+  - Dynamically raises the user's skill cap to the next available ceiling limit: 105, 110, 115, or 120.
+  - If the character's skill is less than 100.0 or already at 120.0, the scroll is not consumed and no error is displayed.
+  - When consumed, with `AutoAdvanceSkillOnUse=true`, it immediately sets the base skill to the new cap.
 - **Bonus Stat Cap Scroll**: A 5% chance (configurable) to receive an additional Stat Cap Scroll (+5 up to +25).
 
 ---

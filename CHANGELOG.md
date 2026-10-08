@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Added Universal Vendor ([`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
+  - Placed via `[add UniversalVendor` by GMs; spawns frozen, invulnerable, and blessed as a stationary master merchant.
+  - Selecting "Buy" (via context menu, speech "buy" / "vendor buy", or double-click) displays an interactive categorized gump (`UniversalVendorTypeGump`) with 33 merchant professions organized across 4 tabs: **Trades & Crafts**, **Magic & Scholarly**, **Provisions & Food**, and **Services & Specialty**.
+  - Choosing any profession opens the native UO client Buy window (`VendorBuyList`), maintaining standard stock quantities and restock cycles matching individual vendor types.
+  - Selecting "Sell" (via context menu or speech "sell" / "vendor sell") opens the native UO client Sell window (`VendorSellList`) aggregating all sellable items in the player's backpack that any realm vendor normally purchases at standard prices.
+  - Directly adheres to [`Config/ServUO/Vendors.cfg`](Config/ServUO/Vendors.cfg) for restock delays (`RestockDelay=15`), initial economy and reagent stock levels (`EconomyStockAmount=640`, `ReagentStockAmount=640`), and restock decay behavior via native `BaseVendor` mechanics.
 - Added procedural crop spawner generator ([`Crops.cs`](custom-scripts/FesterUO/Crops.cs)) and runtime configuration in [`Config/FesterUO/Crops.cfg`](Config/FesterUO/Crops.cfg):
   - Origin: Ported from [TheForging by Triberius-Rex](https://github.com/Triberius-Rex/TheForging/blob/main/Scripts/Custom/Crops.cs).
   - Procedural generation scans dirt tiles (`0x9`) across all facets (Felucca, Trammel, Ilshenar, Malas, Tokuno, TerMur), clusters them into contiguous fields using flood-fill search, and seeds tiles with `XmlSpawner` instances for farmable crops (`FarmableCarrot`, `FarmableCabbage`, `FarmableLettuce`, `FarmableOnion`, `FarmablePumpkin`, `FarmableCotton`, `FarmableFlax`, `FarmableTurnip`, `FarmableWheat`).

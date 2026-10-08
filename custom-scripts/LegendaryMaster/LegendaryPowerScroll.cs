@@ -37,6 +37,8 @@ namespace Server.Custom.Misc
         }
 
         public override int LabelNumber => 1049635; // Wonderous Scroll (+5 Skill)
+        public override int Message => 1049469;
+        public override string DefaultTitle => "<basefont color=#FFFFFF>Legendary Master Scroll (+5 Cap Upgrade):</basefont>";
 
         public override void AddNameProperty(ObjectPropertyList list)
         {

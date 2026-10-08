@@ -692,7 +692,7 @@ namespace Server.Custom.ApexHunt
             int count = 0;
             foreach (NetState state in NetState.Instances)
             {
-                if (state.Mobile is PlayerMobile pm && pm.NetState != null && !pm.Deleted)
+                if (state.Mobile is PlayerMobile pm && pm.NetState != null && !pm.Deleted && pm.AccessLevel == AccessLevel.Player)
                 {
                     count++;
                 }

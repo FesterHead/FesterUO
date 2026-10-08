@@ -17,16 +17,15 @@ index 742855d..2197c64 100644
  
 -                                        if (version == 2 && gbi.Stackable)
 +                                        if (GenericBuyInfo.IsReagent(gbi.Type))
-                                         {
--                                            gbi.Amount = gbi.MaxAmount = BaseVendor.EconomyStockAmount;
++                                        {
 +                                            gbi.Amount = gbi.MaxAmount = Math.Max(amount, BaseVendor.ReagentStockAmount);
 +                                        }
 +                                        else if (gbi.EconomyItem || (version == 2 && gbi.Stackable))
 +                                        {
 +                                            gbi.Amount = gbi.MaxAmount = Math.Max(amount, BaseVendor.EconomyStockAmount);
-                                         }
-                                         else
-                                         {
++                                        }
++                                        else
++                                        {
 diff --git a/Scripts/VendorInfo/GenericBuy.cs b/Scripts/VendorInfo/GenericBuy.cs
 index d8548f8..c0b218c 100644
 --- a/Scripts/VendorInfo/GenericBuy.cs
@@ -36,7 +35,7 @@ index d8548f8..c0b218c 100644
              m_Hue = hue;
              m_Args = args;
 -            m_Stackable = stacks;
-+            m_Stackable = stacks || (type != null && IsReagent(type));
++            m_Stackable = stacks || (type != null && (IsReagent(type) || IsCommodity(type)));
  
 -            if (type != null && EconomyItem)
 +            if (type != null && IsReagent(type))
@@ -47,7 +46,7 @@ index d8548f8..c0b218c 100644
              {
                  m_MaxAmount = m_Amount = BaseVendor.EconomyStockAmount;
              }
-@@ -225,6 +229,13 @@ namespace Server.Mobiles
+@@ -225,6 +229,19 @@ namespace Server.Mobiles
                  m_Hue = value;
              }
          }
@@ -58,10 +57,17 @@ index d8548f8..c0b218c 100644
 +
 +            return typeof(BaseReagent).IsAssignableFrom(type) || type == typeof(Bone) || type == typeof(FertileDirt);
 +        }
++        public static bool IsCommodity(Type type)
++        {
++            if (type == null)
++                return false;
++
++            return type == typeof(BlankScroll) || typeof(ICommodity).IsAssignableFrom(type);
++        }
          public int Amount
          {
              get
-@@ -332,7 +343,7 @@ namespace Server.Mobiles
+@@ -332,7 +349,7 @@ namespace Server.Mobiles
                  if (m_MaxAmount >= 999)
                      m_MaxAmount = 999;
              }
@@ -70,7 +76,7 @@ index d8548f8..c0b218c 100644
              {
                  /* NOTE: According to UO.com, the quantity is halved if the item does not reach 0
                  * Here we implement differently: the quantity is halved only if less than half
-@@ -350,6 +361,15 @@ namespace Server.Mobiles
+@@ -350,6 +367,15 @@ namespace Server.Mobiles
                      m_MaxAmount = halfQuantity;
              }
  
@@ -85,4 +91,3 @@ index d8548f8..c0b218c 100644
 +
              m_Amount = m_MaxAmount;
          }
- 

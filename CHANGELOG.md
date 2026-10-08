@@ -57,7 +57,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Created dynamic Blessed master scroll ([`LegendaryPowerScroll.cs`](custom-scripts/LegendaryMaster/LegendaryPowerScroll.cs)): transferable to other characters on the account, dynamically raising the recipient's skill cap to the next available ceiling limit (105, 110, 115, 120) with a 100.0+ base skill requirement (silently leaves scroll unconsumed without error if skill < 100.0 or already 120.0).
   - Hooked `EventSink.SkillCapChange` to instantly advance the character's base skill to the new scroll ceiling upon consumption (with automatic down-skill reduction if total skills are capped).
 
+### Changed
+- Overhauled Universal Vendor catalogue interface ([`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
+  - Redesigned `UniversalVendorTypeGump` with an authentic textured dark slate stone background (`9200` + `2624`), gold and teal title hierarchy, and proper window dimensions (720x485).
+  - Resolved two-column text collision bug by replacing unbounded `AddLabel` calls with bounded HTML blocks (`cardW - 80`) and concise item summaries, preventing descriptions from bleeding across columns.
+  - Replaced ad-hoc tab buttons with structured category plates displaying active/inactive radio states, tab selection highlighting, and real-time profession counts across all 4 categories.
+  - Transformed profession entries into distinct beveled card panels featuring classic UO item graphics (e.g. hammers, swords, spellbooks, tools, reagents), bold profession titles, and responsive selection buttons.
+  - Added a dedicated "Sell Backpack Items" action button and standard close button directly within the catalogue footer.
+
 ### Fixed
+- Fixed Blank Scroll vendor stock levels across standard NPC Mage/Necromancer vendors and the Universal Vendor ([`23-vendor-reagent-stock.patch`](patches/23-vendor-reagent-stock.patch), [`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
+  - Extended engine patch 23 in `GenericBuy.cs` to classify `BlankScroll` and `ICommodity` trade goods as stackable commodities (`m_Stackable = true`), resolving upstream ServUO's omission of the `stacks` flag in `SBMage.cs` and elevating Blank Scroll stock to `EconomyStockAmount` (640) on initialization, restock, and world deserialization.
+  - Added an active stock floor in `UniversalVendor.OpenCategoryBuy` to elevate `BlankScroll` stock to `EconomyStockAmount` immediately upon script reload.
+- Fixed Apex Hunt player count checks ([`ApexHuntEvent.cs`](custom-scripts/ApexHunt/Core/ApexHuntEvent.cs)) to filter exclusively for normal mortal players (`pm.AccessLevel == AccessLevel.Player`), preventing online staff/GM accounts from triggering automatic hunt rolls when no regular players are present.
 - Fixed legacy `NameBookEntry` Cliloc ID in [`TMapBook.cs`](custom-scripts/TMap/TMapBook.cs) to use official `1011299` ("Rename book") instead of legacy `6216`.
 - Suppressed extraneous .NET CLI workload verification warning (`An issue was encountered verifying workloads`) during dynamic script compilation by configuring `DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true` in `Dockerfile` and `docker-compose.yaml`.
 - Stripped trailing whitespace in [`patches/32-fish-quest-improvements.patch`](patches/32-fish-quest-improvements.patch) ensuring clean, warning-free patch application during build and verification.

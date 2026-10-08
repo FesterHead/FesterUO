@@ -43,7 +43,7 @@ namespace Server.Misc
 
         public static TimeSpan MinDelay => TimeSpan.FromMinutes(Math.Max(0.1, Config.Get("Crops.MinRespawnMinutes", 6.0)));
         public static TimeSpan MaxDelay => TimeSpan.FromMinutes(Math.Max(MinDelay.TotalMinutes, Config.Get("Crops.MaxRespawnMinutes", 12.0)));
-        public static double SpawnChance => Math.Clamp(Config.Get("Crops.SpawnChance", 0.50), 0.0, 1.0);
+        public static double SpawnChance => Math.Max(0.0, Math.Min(1.0, Config.Get("Crops.SpawnChance", 0.50)));
 
         public static List<string> GetCropTypes()
         {
@@ -51,10 +51,14 @@ namespace Server.Misc
             if (!string.IsNullOrWhiteSpace(raw))
             {
                 List<string> validated = new List<string>();
-                string[] entries = raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                string[] entries = raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (string entry in entries)
+                foreach (string rawEntry in entries)
                 {
+                    string entry = rawEntry.Trim();
+                    if (string.IsNullOrEmpty(entry))
+                        continue;
+
                     Type t = ScriptCompiler.FindTypeByName(entry);
                     if (t != null && typeof(Item).IsAssignableFrom(t))
                     {

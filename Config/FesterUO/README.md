@@ -8,6 +8,7 @@ This directory (`Config/FesterUO/`) contains custom gameplay and world tuning co
 
 | Configuration File | Scope | Consuming Systems & Purpose |
 | :--- | :--- | :--- |
+| [`Crops.cfg`](Crops.cfg) | `Crops` | **Consuming Scripts**: `custom-scripts/FesterUO/Crops.cs`<br>Configures procedural crop respawn timing intervals (`MinRespawnMinutes=6.0`, `MaxRespawnMinutes=12.0`), per-tile field spawn probability (`SpawnChance=0.50`), facet enablement (`SpawnTrammel=True`, `SpawnFelucca=True`, `SpawnTokuno=True`), and configurable crop types (`CropTypes`). |
 | [`Harvest.cfg`](Harvest.cfg) | `Harvest` | **Consuming Patches**: `03-harvest-amount`, `04-fishing-delay`, `05-mining-delay`, `06-lumberjacking-delay`<br>Configures resource harvest yields (`MinYield=3`, `MaxYield=6`) and tool delays (`FishingDelay=2.0s`, `MiningDelay=1.0s`, `LumberjackingDelay=1.0s`). |
 | [`Reagents.cfg`](Reagents.cfg) | `Reagents` | **Consuming Scripts**: `custom-scripts/FesterUO/WildernessReagents.cs`<br>Configures automated wilderness ground reagent spawning (`Enabled=True`, `MaxGroundReagents=500`, `RespawnIntervalMinutes=15`, `MinSpawnAmount=1`, `MaxSpawnAmount=3`, `SpawnTrammel=True`, `SpawnFelucca=True`). |
 | [`SlowSkillGrind.cfg`](SlowSkillGrind.cfg) | `SlowSkillGrind` | **Consuming Scripts**: `custom-scripts/FesterUO/SlowSkillGrind.cs`<br>Configures progressive hours-based skill gain past 100 without PowerScrolls (`Enabled=True`, `Tier1Hours=6.0` [100-105], `Tier2Hours=12.0` [105-110], `Tier3Hours=18.0` [110-115], `Tier4Hours=24.0` [115-120], `MaxSkillCap=120.0`). |

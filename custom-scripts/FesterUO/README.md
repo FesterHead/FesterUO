@@ -8,6 +8,7 @@ This directory (`servuo/custom-scripts/FesterUO/`) contains custom gameplay syst
 
 | Script | Purpose & Mechanics | Commands / Trigger |
 | :--- | :--- | :--- |
+| [`Crops.cs`](Crops.cs) | Procedural vegetable crop spawner generator scanning dirt tiles across all maps (Felucca, Trammel, Ilshenar, Malas, Tokuno, TerMur), clustering fields, and placing `XmlSpawner` instances with parameterized respawn intervals and spawn density configured in `Config/FesterUO/Crops.cfg`. | `[GenCrops` (Admin) |
 | [`CustomAutoTools.cs`](CustomAutoTools.cs) | Enchanted gathering and harvesting tools with automated processing: auto-smelt ore to ingots, auto-saw logs to boards, auto-fillet fish, corpse hide skinning, sheep shearing, and area crop scything. Includes player commands (`[ff` / `[FishFilter` / `[FilletFilter`) with an interactive gump to exempt specific fish (e.g. Red Grouper) and auto-protect active Fishmonger quest targets from auto-filleting. | Tool usage / harvest, `[ff`, `[FishFilter`, `[FilletFilter` |
 | [`FesterUOGuideBook.cs`](FesterUOGuideBook.cs) | Blessed reference tome detailing satchel mechanics, auto-tools, backpack fallback routing, open housing, runebook & blank runes, home fixtures (Ankh & Moongate), re-deeding instructions, stable stalls, Hunter's Bestiary treatise progression, Legendary Master quest trials and spoken commands, and player commands (`[Bestiary`, `[rbank`, `[c`, `[say`, `[GetSanctuary`, `[LootFilter`, `[ApexHunt`, `[SlowGrind`, `[guide`). | Distributed to first character per account, or `[guide` / `[guidebook` / `[getguide` |
 | [`GlobalChat.cs`](GlobalChat.cs) | Lightweight server-wide broadcast communication for private duo play, outputting in distinct cyan text across all facets. | `[c <message>`, `[chat <message>` |
@@ -29,4 +30,12 @@ This directory (`servuo/custom-scripts/FesterUO/`) contains custom gameplay syst
 - **Palette Gump & Dynamic Gradient Swatches**: Feng / UO Wildlands Team ([ServUO Community Archive Resource #2642](https://www.servuo.dev/archive/customizable-rune-book-and-spell-book-dye-tubs-16-preset-colors.2642/)).
 - **Universal Dyeing Concepts**: MightyHythloth, Lord_GreyWolf, tangentzero, Triberius-Rex ([Ultimate Hue Room Generation System](https://github.com/Triberius-Rex/TheForging/blob/main/Scripts/Custom/UltimateDyeTub.cs)).
 - **Unified Implementation**: Consolidated and parameterized into `UniversalDyeTub.cs` by FesterUO under the GNU General Public License v3.0 (GPL-3.0).
+
+---
+
+## Community Attribution for Crops
+
+- **Author / Source**: Triberius-Rex ([TheForging Repository - Crops.cs](https://github.com/Triberius-Rex/TheForging/blob/main/Scripts/Custom/Crops.cs)).
+- **Original Implementation**: Procedural vegetable crop generation that scans dirt tiles across maps, groups them into fields using flood-fill search, and seeds each tile with an `XmlSpawner` targeting farmable crops.
+- **FesterUO Integration & Tuning**: Adapted for FesterUO by extracting hardcoded spawner timers into `Config/FesterUO/Crops.cfg` (`MinRespawnMinutes=6.0`, `MaxRespawnMinutes=12.0`) so respawn intervals cleanly exceed ServUO's 5.0-minute picked crop stub decay delay to prevent cosmetic overlap, adding per-tile field spawn density (`SpawnChance=0.50`), parameterizing per-facet map enablement (`SpawnTrammel`, `SpawnFelucca`, `SpawnTokuno`), and exposing configurable crop types (`CropTypes`) backed by compile-time `nameof(...)` fallback verification.
 

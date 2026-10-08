@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Added procedural crop spawner generator ([`Crops.cs`](custom-scripts/FesterUO/Crops.cs)) and runtime configuration in [`Config/FesterUO/Crops.cfg`](Config/FesterUO/Crops.cfg):
+  - Origin: Ported from [TheForging by Triberius-Rex](https://github.com/Triberius-Rex/TheForging/blob/main/Scripts/Custom/Crops.cs).
+  - Procedural generation scans dirt tiles (`0x9`) across all facets (Felucca, Trammel, Ilshenar, Malas, Tokuno, TerMur), clusters them into contiguous fields using flood-fill search, and seeds tiles with `XmlSpawner` instances for farmable crops (`FarmableCarrot`, `FarmableCabbage`, `FarmableLettuce`, `FarmableOnion`, `FarmablePumpkin`, `FarmableCotton`, `FarmableFlax`, `FarmableTurnip`, `FarmableWheat`).
+  - Parameterized crop respawn intervals (`MinRespawnMinutes=6.0`, `MaxRespawnMinutes=12.0`), tile spawn density (`SpawnChance=0.50`), facet enablement (`SpawnTrammel=True`, `SpawnFelucca=True`, `SpawnTokuno=True`), and configurable crop types (`CropTypes`) in `Config/FesterUO/Crops.cfg` backed by compile-time `nameof(...)` fallback verification, ensuring respawns exceed ServUO's 5.0-minute picked crop stub decay delay to eliminate cosmetic overlap.
+  - Provided Administrator command `[GenCrops` to trigger field discovery and spawner placement with dynamic configuration reloading and boundary safety checks.
 - Added Universal Highlander Dye Tub ([`UniversalDyeTub.cs`](custom-scripts/FesterUO/UniversalDyeTub.cs)) and configuration in [`Config/FesterUO/UniversalDyeTub.cfg`](Config/FesterUO/UniversalDyeTub.cfg):
   - "There can be only one": A single blessed all-in-one dye tub capable of dyeing worn and carried equipment, clothing, leather, armor, weapons, shields, jewelry, containers, backpacks, runebooks, all spellbook variants, ethereal mounts, and controlled pets.
   - Parameterized gold cost per use (`CostPerUse=1000`) with automatic backpack and bank balance fallback deduction.
@@ -34,7 +39,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added an `Upgrade All (+1)` action button in the book footer to batch-upgrade all qualifying maps and SOS messages in the tome in a single click.
   - Multi-source currency deduction supporting account gold, bank box gold/checks, and backpack gold stacks at 10,000 gp per level gained.
   - Strict preservation of natural pinnacle tiers: SOS messages cap at Level 3 preventing advancement to Level 4 Ancient SOS, and Treasure Maps cap at Level 6 (Ingeniously Drawn) preserving natural Level 7 Diabolical drops.
-
 - Expanded `ResourceSatchel.cs` to support organization containers (e.g. bags, pouches, wooden boxes) containing valid resources with recursive weight neutralization (100% weight reduction) and isolated item counts, and updated automated resource harvesting deposit routing to intelligently detect and merge with matching resource stacks located inside organization sub-bags.
 - Expanded `ResourceSatchel.cs` to store all maps (`MapItem` except `TreasureMap`, including `BlankMap`, vendor `PresetMap`, and crafted maps like `LocalMap`, `CityMap`, `SeaChart`, `WorldMap`) as well as `BlankScroll` with 100% weight reduction and isolated item counts, supporting cartography training and map storage.
 - Updated `FesterUOGuideBook.cs` to add player commands `[guide`, `[guidebook`, and `[getguide` (providing or replacing any outdated copy in the backpack with a fresh edition and opening it), added dedicated pages for the Legendary Master of Skills (quest trials, Grandmaster 100.0 prerequisite, and spoken commands `give task <skill>` / `remove task`), added `[guide` to Player Commands 4, and updated satchel details.

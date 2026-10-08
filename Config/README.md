@@ -18,7 +18,7 @@ The configuration files are organized into functional subdirectories, each with 
    Contains the 14 base ServUO platform configuration files (`Accounts.cfg`, `AutoRestart.cfg`, `AutoSave.cfg`, `Champions.cfg`, `DataPath.cfg`, `Expansion.cfg`, `General.cfg`, `Housing.cfg`, `Loot.cfg`, `PlayerCaps.cfg`, `Server.cfg`, `TreasureMaps.cfg`, `Vendors.cfg`, `VetRewards.cfg`) tuned for this shard.
 
 2. **[`FesterUO/`](FesterUO/README.md)**:
-   Contains custom shard progression, harvesting, stable stall, and dye tub configurations (`Harvest.cfg`, `Reagents.cfg`, `SlowSkillGrind.cfg`, `Stables.cfg`, `UniversalDyeTub.cfg`) consumed by custom systems and patches.
+   Contains custom shard progression, crop spawning, harvesting, stable stall, and dye tub configurations (`Crops.cfg`, `Harvest.cfg`, `Reagents.cfg`, `SlowSkillGrind.cfg`, `Stables.cfg`, `UniversalDyeTub.cfg`) consumed by custom systems and patches.
 
 3. **[`PetExchange/`](PetExchange/README.md)**:
    Contains configuration files for the Pet Exchange Hitching Post house addon (`PetExchange.cfg`).

@@ -254,15 +254,15 @@ namespace Server.Custom
             new BookPageInfo(
                 "PLAYER COMMANDS 4",
                 "-------------------",
-                "[guide",
+                "[guide / [newguide",
                 "  Opens or receives the",
                 "  latest Adventurer's",
                 "  Guide edition.",
                 "",
-                "[guidebook",
-                "  Alias for [guide.",
+                "[guidebook / [getguide",
+                "  Aliases for [guide.",
                 "",
-                "[getguide",
+                "[newguidebook",
                 "  Alias for [guide."),
             new BookPageInfo(
                 "LEGENDARY MASTER",
@@ -329,10 +329,12 @@ namespace Server.Custom
             CommandSystem.Register("Guide", AccessLevel.Player, Guide_OnCommand);
             CommandSystem.Register("GuideBook", AccessLevel.Player, Guide_OnCommand);
             CommandSystem.Register("GetGuide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("NewGuide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("NewGuideBook", AccessLevel.Player, Guide_OnCommand);
         }
 
         [Usage("Guide")]
-        [Aliases("GuideBook", "GetGuide")]
+        [Aliases("GuideBook", "GetGuide", "NewGuide", "NewGuideBook")]
         [Description("Opens your Adventurer's Guide or provides a fresh copy updated to the latest edition.")]
         private static void Guide_OnCommand(CommandEventArgs e)
         {

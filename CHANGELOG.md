@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Added [`35-tmap-sos-loot-tuning.patch`](patches/35-tmap-sos-loot-tuning.patch) and parameterized equipment loot quality scaling in [`Config/ServUO/TreasureMaps.cfg`](Config/ServUO/TreasureMaps.cfg) (`EnhancedLootQuality=True`, `LootBudgetBonus=100`, `ApplyPlayerLuck=True`, `SOSItemCountMultiplier=2.0`):
+  - Overrides the low-tier equipment roll tables in `TreasureMapChest.GetRandomItemStat` with enhanced property budget brackets (`EnhancedLootQuality=True`), raising budget floors from 100 to 250+ and increasing chances for high-tier and artifact-grade reforged equipment (budgets 600–1400+) with flat budget bonus tuning (`LootBudgetBonus=100`).
+  - Hooks the player digger/fisher into `RunicReforging.GenerateRandomItem` (`ApplyPlayerLuck=True`), enabling character Luck to drive multiple budget sample rolls (`1 + (Luck / 600)`), activating the low-budget luck bump check, and applying Felucca rules bonuses.
+  - Scales magical equipment drop counts in SOS/MIB chests (`SOSItemCountMultiplier=2.0`), doubling equipment drops across all SOS levels (Level 1: 4–12; Level 2: 20–30; Level 3: 30–40; Level 4 Ancient: 40–50 items).
 - Added Universal Vendor ([`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
   - Placed via `[add UniversalVendor` by GMs; spawns frozen, invulnerable, and blessed as a stationary master merchant.
   - Selecting "Buy" (via context menu, speech "buy" / "vendor buy", or double-click) displays an interactive categorized gump (`UniversalVendorTypeGump`) with 33 merchant professions organized across 4 tabs: **Trades & Crafts**, **Magic & Scholarly**, **Provisions & Food**, and **Services & Specialty**.

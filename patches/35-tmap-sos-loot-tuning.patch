@@ -1,0 +1,152 @@
+diff --git a/Scripts/Services/TreasureMaps/TreasureMapChest.cs b/Scripts/Services/TreasureMaps/TreasureMapChest.cs
+index aa699299..11b2ef34 100644
+--- a/Scripts/Services/TreasureMaps/TreasureMapChest.cs
++++ b/Scripts/Services/TreasureMaps/TreasureMapChest.cs
+@@ -62,6 +62,19 @@ namespace Server.Items
+             typeof(EssenceOrder),   typeof(EssencePassion),   typeof(EssencePersistence), typeof(EssenceSingularity)
+         };
+ 
++        public static bool EnhancedLootQuality { get; set; }
++        public static int LootBudgetBonus { get; set; }
++        public static bool ApplyPlayerLuck { get; set; }
++        public static double SOSItemCountMultiplier { get; set; }
++
++        public static void Configure()
++        {
++            EnhancedLootQuality = Config.Get("TreasureMaps.EnhancedLootQuality", true);
++            LootBudgetBonus = Config.Get("TreasureMaps.LootBudgetBonus", 100);
++            ApplyPlayerLuck = Config.Get("TreasureMaps.ApplyPlayerLuck", true);
++            SOSItemCountMultiplier = Config.Get("TreasureMaps.SOSItemCountMultiplier", 2.0);
++        }
++
+         private List<Item> m_Lifted = new List<Item>();
+ 
+         private ChestQuality _Quality;
+@@ -233,26 +246,26 @@ namespace Server.Items
+                     switch (level)
+                     {
+                         case 1:
+-                            count = isSos ? Utility.RandomMinMax(2, 6) : 32;
++                            count = isSos ? (int)(Utility.RandomMinMax(2, 6) * SOSItemCountMultiplier) : 32;
+ 							propsScale = 0.5625;
+                             break;
+                         case 2:
+-                            count = isSos ? Utility.RandomMinMax(10, 15) : 40;
++                            count = isSos ? (int)(Utility.RandomMinMax(10, 15) * SOSItemCountMultiplier) : 40;
+ 							propsScale = 0.6875;
+                             break;
+                         case 3:
+-                            count = isSos ? Utility.RandomMinMax(15, 20) : 48;
++                            count = isSos ? (int)(Utility.RandomMinMax(15, 20) * SOSItemCountMultiplier) : 48;
+ 							propsScale = 0.875;
+                             break;
+                         case 4:
+-                            count = isSos ? Utility.RandomMinMax(15, 20) : 56;
++                            count = isSos ? (int)(Utility.RandomMinMax(20, 25) * SOSItemCountMultiplier) : 56;
+                             break;
+                         case 5:
+-                            count = isSos ? Utility.RandomMinMax(15, 20) : 64;
++                            count = isSos ? (int)(Utility.RandomMinMax(20, 25) * SOSItemCountMultiplier) : 64;
+                             break;
+                         case 6:
+-                            count = isSos ? Utility.RandomMinMax(15, 20) : 72;
++                            count = isSos ? (int)(Utility.RandomMinMax(20, 25) * SOSItemCountMultiplier) : 72;
+                             break;
+                         case 7:
+-                            count = isSos ? Utility.RandomMinMax(15, 20) : 80;
++                            count = isSos ? (int)(Utility.RandomMinMax(20, 25) * SOSItemCountMultiplier) : 80;
+                             break;
+                         default:
+                             count = 0;
+                             break;
+@@ -278,7 +291,14 @@ namespace Server.Items
+                         int min, max;
+                         GetRandomItemStat(out min, out max, propsScale);
+ 
+-                        RunicReforging.GenerateRandomItem(item, luck, min, max, map);
++                        if (ApplyPlayerLuck)
++                        {
++                            int budget = min < max ? Utility.RandomMinMax(min, max) : min;
++                            RunicReforging.GenerateRandomItem(item, from, budget, LootPack.GetLuckChance(luck), ReforgedPrefix.None, ReforgedSuffix.None, map);
++                        }
++                        else
++                        {
++                            RunicReforging.GenerateRandomItem(item, luck, min, max, map);
++                        }
+ 
+                         cont.DropItem(item);
+                     }
+@@ -495,26 +515,56 @@ namespace Server.Items
+         {
+             int rnd = Utility.Random(100);
+ 
+-            if (rnd <= 1)
++            if (EnhancedLootQuality)
+             {
+-                min = 500; max = 1300;
++                if (rnd < 5)
++                {
++                    min = 600; max = 1400;
++                }
++                else if (rnd < 20)
++                {
++                    min = 500; max = 1200;
++                }
++                else if (rnd < 50)
++                {
++                    min = 400; max = 950;
++                }
++                else if (rnd < 80)
++                {
++                    min = 300; max = 800;
++                }
++                else
++                {
++                    min = 250; max = 650;
++                }
++
++                if (LootBudgetBonus != 0)
++                {
++                    min += LootBudgetBonus;
++                    max += LootBudgetBonus;
++                }
+             }
+-            else if (rnd < 5)
++            else
+             {
+-                min = 400; max = 1100;
+-            }
+-            else if (rnd < 25)
+-            {
+-                min = 350; max = 900;
+-            }
+-            else if (rnd < 50)
+-            {
+-                min = 250; max = 800;
+-            }
+-            else
+-            {
+-                min = 100; max = 600;
++                if (rnd <= 1)
++                {
++                    min = 500; max = 1300;
++                }
++                else if (rnd < 5)
++                {
++                    min = 400; max = 1100;
++                }
++                else if (rnd < 25)
++                {
++                    min = 350; max = 900;
++                }
++                else if (rnd < 50)
++                {
++                    min = 250; max = 800;
++                }
++                else
++                {
++                    min = 100; max = 600;
++                }
+             }
+ 
+ 			min = (int)(min * scale);

@@ -1,8 +1,8 @@
 diff --git a/Scripts/Services/TreasureMaps/TreasureMapChest.cs b/Scripts/Services/TreasureMaps/TreasureMapChest.cs
-index aa699299..11b2ef34 100644
+index 08d96906..cb70c908 100644
 --- a/Scripts/Services/TreasureMaps/TreasureMapChest.cs
 +++ b/Scripts/Services/TreasureMaps/TreasureMapChest.cs
-@@ -62,6 +62,19 @@ namespace Server.Items
+@@ -61,6 +61,19 @@ namespace Server.Items
              typeof(EssenceOrder),   typeof(EssencePassion),   typeof(EssencePersistence), typeof(EssenceSingularity)
          };
  
@@ -22,7 +22,7 @@ index aa699299..11b2ef34 100644
          private List<Item> m_Lifted = new List<Item>();
  
          private ChestQuality _Quality;
-@@ -233,26 +246,26 @@ namespace Server.Items
+@@ -233,28 +246,28 @@ namespace Server.Items
                      switch (level)
                      {
                          case 1:
@@ -58,8 +58,7 @@ index aa699299..11b2ef34 100644
                              break;
                          default:
                              count = 0;
-                             break;
-@@ -278,7 +291,14 @@ namespace Server.Items
+@@ -278,7 +291,15 @@ namespace Server.Items
                          int min, max;
                          GetRandomItemStat(out min, out max, propsScale);
  
@@ -76,14 +75,26 @@ index aa699299..11b2ef34 100644
  
                          cont.DropItem(item);
                      }
-@@ -495,26 +515,56 @@ namespace Server.Items
+@@ -495,25 +516,57 @@ namespace Server.Items
          {
              int rnd = Utility.Random(100);
  
 -            if (rnd <= 1)
+-            {
+-                min = 500; max = 1300;
+-            }
+-            else if (rnd < 5)
+-            {
+-                min = 400; max = 1100;
+-            }
+-            else if (rnd < 25)
+-            {
+-                min = 350; max = 900;
+-            }
+-            else if (rnd < 50)
 +            if (EnhancedLootQuality)
              {
--                min = 500; max = 1300;
+-                min = 250; max = 800;
 +                if (rnd < 5)
 +                {
 +                    min = 600; max = 1400;
@@ -111,21 +122,8 @@ index aa699299..11b2ef34 100644
 +                    max += LootBudgetBonus;
 +                }
              }
--            else if (rnd < 5)
-+            else
+             else
              {
--                min = 400; max = 1100;
--            }
--            else if (rnd < 25)
--            {
--                min = 350; max = 900;
--            }
--            else if (rnd < 50)
--            {
--                min = 250; max = 800;
--            }
--            else
--            {
 -                min = 100; max = 600;
 +                if (rnd <= 1)
 +                {

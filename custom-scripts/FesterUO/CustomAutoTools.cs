@@ -595,10 +595,23 @@ namespace Server.Custom
                 }
                 else if (targeted is Sheep sheep)
                 {
-                    if (sheep.Alive && !sheep.Controlled)
+                    if (!sheep.Alive)
                     {
+                        from.SendMessage(38, "That sheep is dead.");
+                    }
+                    else if (sheep.Controlled)
+                    {
+                        from.SendMessage(38, "You cannot shear someone's pet.");
+                    }
+                    else if (DateTime.UtcNow < sheep.NextWoolTime || sheep.Body == 0xDF)
+                    {
+                        from.SendMessage(38, "This sheep is not yet ready to be shorn.");
+                    }
+                    else
+                    {
+                        double regrowthMinutes = Config.Get("Harvest.SheepWoolRegrowthMinutes", 30.0);
                         sheep.PlaySound(0xD6);
-                        sheep.BodyValue = 0xDF; // Sheared graphic
+                        sheep.NextWoolTime = DateTime.UtcNow + TimeSpan.FromMinutes(Math.Max(1.0, regrowthMinutes));
 
                         BoltOfCloth cloth = new BoltOfCloth(2);
                         FestersResourceSatchel.Deposit(from, cloth);

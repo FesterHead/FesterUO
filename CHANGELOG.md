@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Hooked `EventSink.SkillCapChange` to instantly advance the character's base skill to the new scroll ceiling upon consumption (with automatic down-skill reduction if total skills are capped).
 
 ### Changed
+- Updated skill cap documentation and comments in [`Config/ServUO/PlayerCaps.cfg`](Config/ServUO/PlayerCaps.cfg) and [`Config/ServUO/README.md`](Config/ServUO/README.md) to reflect that characters can advance skills and caps beyond 100.0 (up to 120.0 Legendary) via either Power Scrolls or the shard's Slow Skill Grind progression system ([`Config/FesterUO/SlowSkillGrind.cfg`](Config/FesterUO/SlowSkillGrind.cfg)).
 - Overhauled Universal Vendor catalogue interface ([`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
   - Redesigned `UniversalVendorTypeGump` with an authentic textured dark slate stone background (`9200` + `2624`), gold and teal title hierarchy, and proper window dimensions (720x485).
   - Resolved two-column text collision bug by replacing unbounded `AddLabel` calls with bounded HTML blocks (`cardW - 80`) and concise item summaries, preventing descriptions from bleeding across columns.
@@ -74,6 +75,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added a dedicated "Sell Backpack Items" action button and standard close button directly within the catalogue footer.
 
 ### Fixed
+- Fixed instant wool regrowth and unlimited rapid-shearing of sheep when using Fester's Skinning Knife ([`CustomAutoTools.cs`](custom-scripts/FesterUO/CustomAutoTools.cs)):
+  - Enforced checks for sheep vitality, pet control status, and wool readiness (`DateTime.UtcNow < sheep.NextWoolTime || sheep.Body == 0xDF`).
+  - Sets `sheep.NextWoolTime` to properly maintain the shorn body graphic (`0xDF`) and prevent premature shearing until the cooldown elapses.
+  - Parameterized the wool regrowth interval via `SheepWoolRegrowthMinutes=30.0` in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg) and documented in [`Config/FesterUO/README.md`](Config/FesterUO/README.md).
 - Fixed Blank Scroll vendor stock levels across standard NPC Mage/Necromancer vendors and the Universal Vendor ([`23-vendor-reagent-stock.patch`](patches/23-vendor-reagent-stock.patch), [`UniversalVendor.cs`](custom-scripts/FesterUO/UniversalVendor.cs)):
   - Extended engine patch 23 in `GenericBuy.cs` to classify `BlankScroll` and `ICommodity` trade goods as stackable commodities (`m_Stackable = true`), resolving upstream ServUO's omission of the `stacks` flag in `SBMage.cs` and elevating Blank Scroll stock to `EconomyStockAmount` (640) on initialization, restock, and world deserialization.
   - Added an active stock floor in `UniversalVendor.OpenCategoryBuy` to elevate `BlankScroll` stock to `EconomyStockAmount` immediately upon script reload.

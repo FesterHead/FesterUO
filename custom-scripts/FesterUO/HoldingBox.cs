@@ -192,7 +192,7 @@ namespace Server.Custom
             private readonly HoldingBox m_Box;
             private readonly Mobile m_From;
 
-            public RaiseEntry(HoldingBox box, Mobile from) : base(6174, 2) // Raise
+            public RaiseEntry(HoldingBox box, Mobile from) : base(1018324, 2) // Up
             {
                 m_Box = box;
                 m_From = from;
@@ -218,7 +218,7 @@ namespace Server.Custom
             private readonly HoldingBox m_Box;
             private readonly Mobile m_From;
 
-            public LowerEntry(HoldingBox box, Mobile from) : base(6175, 2) // Lower
+            public LowerEntry(HoldingBox box, Mobile from) : base(1018325, 2) // Down
             {
                 m_Box = box;
                 m_From = from;
@@ -251,7 +251,7 @@ namespace Server.Custom
             private readonly HoldingBox m_Box;
             private readonly Mobile m_From;
 
-            public TurnEntry(HoldingBox box, Mobile from) : base(6176, 2) // Turn
+            public TurnEntry(HoldingBox box, Mobile from) : base(1018323, 2) // Turn
             {
                 m_Box = box;
                 m_From = from;
@@ -275,7 +275,7 @@ namespace Server.Custom
             private readonly HoldingBox m_Box;
             private readonly Mobile m_From;
 
-            public PackUpEntry(HoldingBox box, Mobile from) : base(6173, 2) // Pack Up
+            public PackUpEntry(HoldingBox box, Mobile from) : base(1151601, 2) // Re-deed
             {
                 m_Box = box;
                 m_From = from;

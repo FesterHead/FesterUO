@@ -144,7 +144,7 @@ namespace Server.Custom
             private readonly HouseTrashBarrel m_Barrel;
             private readonly Mobile m_From;
 
-            public PackUpEntry(HouseTrashBarrel barrel, Mobile from) : base(6173, 2) // Pack Up
+            public PackUpEntry(HouseTrashBarrel barrel, Mobile from) : base(1151601, 2) // Re-deed
             {
                 m_Barrel = barrel;
                 m_From = from;

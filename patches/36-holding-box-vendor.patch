@@ -1,0 +1,16 @@
+diff --git a/Scripts/VendorInfo/SBTinker.cs b/Scripts/VendorInfo/SBTinker.cs
+--- a/Scripts/VendorInfo/SBTinker.cs
++++ b/Scripts/VendorInfo/SBTinker.cs
+@@ -55,6 +55,12 @@ namespace Server.Mobiles
+                 Add(new GenericBuyInfo(typeof(Board), 3, 20, 0x1BD7, 0, true));
+                 Add(new GenericBuyInfo(typeof(IronIngot), 5, 16, 0x1BF2, 0, true));
+                 Add(new GenericBuyInfo(typeof(SewingKit), 3, 20, 0xF9D, 0));
++
++                Type tHoldingBox = Server.ScriptCompiler.FindTypeByName("HoldingBoxDeed");
++                if (tHoldingBox != null)
++                {
++                    Add(new GenericBuyInfo("a holding box deed", tHoldingBox, Server.Config.Get("Vendors.HoldingBoxDeedCost", 100000), 20, 0x14F0, 1175));
++                }
+ 
+                 Add(new GenericBuyInfo(typeof(DrawKnife), 10, 20, 0x10E4, 0));
+                 Add(new GenericBuyInfo(typeof(Froe), 10, 20, 0x10E5, 0));

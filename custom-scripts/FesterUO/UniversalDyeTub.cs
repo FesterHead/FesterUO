@@ -243,7 +243,10 @@ namespace Server.Items
                         return;
                     }
 
-                    if (item.RootParent == from)
+                    Server.Multis.BaseHouse house = Server.Multis.BaseHouse.FindHouseAt(item);
+                    bool inHouse = house != null && (house.IsCoOwner(from) || from.AccessLevel >= AccessLevel.GameMaster);
+
+                    if (item.RootParent == from || inHouse)
                     {
                         if (DeductCost(from, cost))
                         {
@@ -255,7 +258,7 @@ namespace Server.Items
                     }
                     else
                     {
-                        from.SendMessage(38, "You can only dye objects that are in your backpack or on your person!");
+                        from.SendMessage(38, "You can only dye objects that are in your backpack or in your house!");
                     }
                 }
                 else if (targeted is BaseCreature pet)

@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### Added
+- Added Multi-Floor House Trash Barrel & Craftable Deed ([`TrashBarrel.cs`](custom-scripts/FesterUO/TrashBarrel.cs)) and configuration in [`Config/FesterUO/TrashBarrel.cfg`](Config/FesterUO/TrashBarrel.cfg):
+  - Provides a craftable blessed deed (`TrashBarrelDeed`) that allows placing multiple functional trash barrels across multiple house floors, bypassing the legacy retail 1-barrel limit in `BaseHouse`.
+  - Places a genuine `HouseTrashBarrel` (inheriting from `TrashBarrel`) with full Clean Up Britannia (CUB) points appraisal and payout, 3-minute auto-emptying timer (or instant at 50 items), and Stygian Abyss Cavern of the Discarded chance.
+  - Supports non-destructive relocation: dismantling via axe chopping (`IChopable`) or the right-click context menu ("Pack Up") safely returns the `TrashBarrelDeed` if the barrel is empty (`TrashBarrel.ChopReturnsDeed=true`), rejecting dismantling if items are still inside to avoid item loss.
+  - Supports custom dyeing via `[Furniture]` attribute and direct integration with the Highlander Universal Dye Tub ([`UniversalDyeTub.cs`](custom-scripts/FesterUO/UniversalDyeTub.cs)).
+  - Automatically registers a Carpentry crafting recipe under Containers (`1044292`) with parameterized skill requirements (`TrashBarrel.MinSkill=65.0`, `TrashBarrel.MaxSkill=90.0`) requiring 30 Oak Boards (`TrashBarrel.OakBoards=30`), 15 Shadow Iron Ingots (`TrashBarrel.ShadowIronIngots=15`), and 5 Sulfurous Ash (`TrashBarrel.SulfurousAsh=5`).
+- Added High-Capacity Tabletop Holding Box & Deed ([`HoldingBox.cs`](custom-scripts/FesterUO/HoldingBox.cs)) and configuration in [`Config/FesterUO/HoldingBox.cfg`](Config/FesterUO/HoldingBox.cfg):
+  - Compact tabletop wooden box (`0xE7D`) designed to store large volumes of unsorted loot without consuming house lockdowns or secure storage limits.
+  - Parameterized maximum item capacity (`HoldingBox.MaxItems=1000`, default: 1,000 items) and unlimited weight (`HoldingBox.MaxWeight=0`).
+  - Automatically calculates surface height when placed from a deed (`HoldingBoxDeed`) onto tables, counters, desks, or existing boxes (`z = item.Z + item.ItemData.Height`), supporting clean stacking.
+  - Built-in right-click context menu controls for house owners and co-owners: **Raise** (`+1 Z`), **Lower** (`-1 Z`), **Turn** (cycles graphics), and **Pack Up** (re-deeds empty box). Also supports dismantling with an axe via `IChopable`.
+  - Added [`36-holding-box-vendor.patch`](patches/36-holding-box-vendor.patch) allowing Tinker NPC vendors (`SBTinker`) to sell Holding Box Deeds for 100,000 gold (`Vendors.HoldingBoxDeedCost=100000`).
+  - Enhanced [`UniversalDyeTub.cs`](custom-scripts/FesterUO/UniversalDyeTub.cs) to allow dyeing items (including holding boxes and furniture) located inside a house owned or co-owned by the player.
 - Added [`35-tmap-sos-loot-tuning.patch`](patches/35-tmap-sos-loot-tuning.patch) and parameterized equipment loot quality scaling in [`Config/ServUO/TreasureMaps.cfg`](Config/ServUO/TreasureMaps.cfg) (`EnhancedLootQuality=True`, `LootBudgetBonus=100`, `ApplyPlayerLuck=True`, `SOSItemCountMultiplier=2.0`):
   - Overrides the low-tier equipment roll tables in `TreasureMapChest.GetRandomItemStat` with enhanced property budget brackets (`EnhancedLootQuality=True`), raising budget floors from 100 to 250+ and increasing chances for high-tier and artifact-grade reforged equipment (budgets 600–1400+) with flat budget bonus tuning (`LootBudgetBonus=100`).
   - Hooks the player digger/fisher into `RunicReforging.GenerateRandomItem` (`ApplyPlayerLuck=True`), enabling character Luck to drive multiple budget sample rolls (`1 + (Luck / 600)`), activating the low-budget luck bump check, and applying Felucca rules bonuses.

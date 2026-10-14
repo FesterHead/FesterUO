@@ -293,13 +293,13 @@ namespace Server.Custom
                 minSkill,
                 maxSkill,
                 typeof(OakBoard),
-                1072644, // Oak Board
+                "Oak Board",
                 oakBoards,
-                1072652  // You do not have enough oak wood.
+                "You do not have enough oak boards."
             );
 
-            craft.AddRes(index, typeof(ShadowIronIngot), 1044024, shadowIronIngots, 1044268); // Shadow Iron Ingot
-            craft.AddRes(index, typeof(SulfurousAsh), 1044355, sulfurousAsh, 1044363);         // Sulfurous Ash
+            craft.AddRes(index, typeof(ShadowIronIngot), "Shadow Iron Ingot", shadowIronIngots, "You do not have enough shadow iron ingots.");
+            craft.AddRes(index, typeof(SulfurousAsh), "Sulfurous Ash", sulfurousAsh, "You do not have enough sulfurous ash.");
 
             craft.ForceNonExceptional(index);
         }

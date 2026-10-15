@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- Added Fundamental Skill Trainer NPC & Interactive Gump ([`SkillTrainer.cs`](custom-scripts/FesterUO/SkillTrainer.cs)) and configuration in [`Config/FesterUO/SkillTrainer.cfg`](Config/FesterUO/SkillTrainer.cfg):
+  - Spawns an NPC mentor mobile (`SkillTrainer`) placed via `[add SkillTrainer` that provides rapid fundamental skill tutoring up to 40.0 for a flat fee of 1,000 gold per skill.
+  - Interactive multi-page gump (`SkillTrainerGump`) automatically lists all character skills with current levels below 40.0 (`SkillTrainer.TargetSkillLevel=40.0`), sorted alphabetically with 10 skills per page and next/previous page navigation controls.
+  - Features real-time status display of available gold (backpack and bank balance) and total character skill points against the character's skill cap.
+  - Automatically deducts gold from the player's backpack first and falls back to their bank box balance if needed (`SkillTrainer.AllowBankGold=True`).
+  - Manages total skill caps gracefully: automatically consumes points from skills explicitly locked to 'Down' if extra room is required under the skill cap, or advises the player to flag unused skills if insufficient points are available.
+  - Supports multiple interaction methods including double-clicking, speech keywords ("train", "skill", "learn", "teach", "help"), and right-click context menu ("Talk").
+  - Instantly refreshes the gump and triggers celebratory audio-visual sparkle effects upon skill training, enabling seamless sequential training.
 - Added Multi-Floor House Trash Barrel & Craftable Deed ([`TrashBarrel.cs`](custom-scripts/FesterUO/TrashBarrel.cs)) and configuration in [`Config/FesterUO/TrashBarrel.cfg`](Config/FesterUO/TrashBarrel.cfg):
   - Provides a craftable blessed deed (`TrashBarrelDeed`) that allows placing multiple functional trash barrels across multiple house floors, bypassing the legacy retail 1-barrel limit in `BaseHouse`.
   - Places a genuine `HouseTrashBarrel` (inheriting from `TrashBarrel`) with full Clean Up Britannia (CUB) points appraisal and payout, 3-minute auto-emptying timer (or instant at 50 items), and Stygian Abyss Cavern of the Discarded chance.

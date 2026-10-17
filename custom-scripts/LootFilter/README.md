@@ -15,7 +15,7 @@ This directory (`servuo/custom-scripts/LootFilter/`) contains the **ARPG-Style L
 
 The system provides complete player-side control over ground and corpse loot visibility to streamline dungeon farming and grinding:
 
-1. **8 Filter Categories & 87+ Properties**:
+1. **9 Filter Categories & 100+ Properties**:
    - **Primary**: Physical, Fire, Cold, Poison, Energy resistances, and total resistance thresholds.
    - **Combat**: Hit Chance Increase, Defense Chance Increase, Damage Increase, Swing Speed Increase, Velocity, etc.
    - **Magic**: Lower Mana Cost, Faster Casting, Faster Cast Recovery, Spell Damage Increase, Lower Reagent Cost, Mage Armor, Mage Weapon, etc.
@@ -24,13 +24,15 @@ The system provides complete player-side control over ground and corpse loot vis
    - **HitsLeech**: Hit Life Leech, Hit Mana Leech, Hit Stamina Leech, Hit Fatigue, Hit Mana Drain.
    - **HitsMagic**: Hit Spell effects (Fireball, Lightning, Magic Arrow, Harm, Curse, Dispel).
    - **Special**: Balanced, Self Repair, Night Sight, Lower Stat Requirements, Soul Charge, Splintering Weapon, Absorption.
+   - **Slayers**: Dedicated 3-page browser covering "Any Slayer" master toggle, Super Slayers (Repond, Undead/Silver, Reptilian Death, Exorcism/Demon, Arachnid Doom, Elemental Ban, Fey, Dinosaur, Myrmidex, Eodon), and creature-specific mini slayers (Dragon Slaying, Orc Slaying, Daemon Dismissal, etc.).
 2. **Interactive Multi-Category Gump (`[LootFilter`)**:
    - Paginated navigation across categories with dynamic zebra-striping.
-   - Individual enable/disable checkboxes and numeric threshold inputs for every property.
+   - Individual enable/disable checkboxes, binary active badges for slayers, and numeric threshold inputs for properties.
+   - Sub-page navigation within the Slayers category (3 pages).
 3. **Global Toggle**:
    - Master switch to turn the entire filter on or off without resetting individual property configurations.
 4. **Safe Filtering Guarantees**:
-   - Only filters equipment (Weapons, Armor, Clothing, Hats, Jewelry, Quivers).
+   - Only filters equipment (Weapons, Armor, Clothing, Hats, Jewelry, Quivers, Spellbooks, Instruments).
    - Never hides artifacts (`ArtifactRarity > 0` or items with `IsArtifact = true`).
    - Never hides Gold, Gems, Reagents, Potions, Keys, Maps, or Quest items.
    - **Backpack & Bank Safety**: Items inside the player's backpack, subcontainers, or bank box are never hidden, regardless of filter strictness.

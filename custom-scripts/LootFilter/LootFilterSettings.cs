@@ -22,7 +22,8 @@ namespace Server.Engines.LootFilter
         Damage,
         HitsLeech,
         HitsMagic,
-        Special
+        Special,
+        Slayers
     }
 
     [PropertyObject]
@@ -74,6 +75,10 @@ namespace Server.Engines.LootFilter
         public bool[] EnabledResistances { get; set; } = new bool[5];
         public bool[] EnabledDamages { get; set; } = new bool[7];
 
+        // Slayers
+        public bool AnySlayer { get; set; }
+        public HashSet<SlayerName> EnabledSlayers { get; set; } = new HashSet<SlayerName>();
+
         public LootFilterSettings()
         {
             Enabled = true;
@@ -81,9 +86,14 @@ namespace Server.Engines.LootFilter
 
         public void Serialize(GenericWriter writer)
         {
-            writer.Write((int)2); // version
+            writer.Write((int)3); // version
 
             writer.Write(Enabled);
+
+            // Version 3 Additions
+            writer.Write(AnySlayer);
+            writer.Write(EnabledSlayers.Count);
+            foreach (var s in EnabledSlayers) writer.Write((int)s);
 
             // Version 2 Additions
             writer.Write(EnabledAttributes.Count);
@@ -170,6 +180,13 @@ namespace Server.Engines.LootFilter
             int version = reader.ReadInt();
 
             Enabled = reader.ReadBool();
+
+            if (version >= 3)
+            {
+                AnySlayer = reader.ReadBool();
+                int sCount = reader.ReadInt();
+                for (int i = 0; i < sCount; i++) EnabledSlayers.Add((SlayerName)reader.ReadInt());
+            }
 
             if (version >= 2)
             {

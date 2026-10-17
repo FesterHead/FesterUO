@@ -22,6 +22,7 @@ namespace Server.Engines.LootFilter
         private PlayerMobile m_Player;
         private LootFilterAttachment m_Attachment;
         private LootFilterCategory m_Category;
+        private int m_SlayerPage;
         private int m_RowIndex;
 
         public static void Initialize()
@@ -310,6 +311,59 @@ namespace Server.Engines.LootFilter
             }
         }
 
+        private class SlayerFilterEntry : FilterEntry
+        {
+            public SlayerName Slayer { get; }
+            public bool IsAnySlayer { get; }
+            public int Page { get; }
+
+            public SlayerFilterEntry(string name, SlayerName slayer, int page)
+                : base(name, LootFilterCategory.Slayers)
+            {
+                Slayer = slayer;
+                IsAnySlayer = false;
+                Page = page;
+            }
+
+            public SlayerFilterEntry(string name, int page)
+                : base(name, LootFilterCategory.Slayers)
+            {
+                Slayer = SlayerName.None;
+                IsAnySlayer = true;
+                Page = page;
+            }
+
+            public override bool IsEnabled(LootFilterSettings s)
+            {
+                if (IsAnySlayer) return s.AnySlayer;
+                return s.EnabledSlayers.Contains(Slayer);
+            }
+
+            public override void Toggle(LootFilterSettings s)
+            {
+                if (IsAnySlayer)
+                {
+                    s.AnySlayer = !s.AnySlayer;
+                }
+                else
+                {
+                    if (s.EnabledSlayers.Contains(Slayer))
+                        s.EnabledSlayers.Remove(Slayer);
+                    else
+                        s.EnabledSlayers.Add(Slayer);
+                }
+            }
+
+            public override int GetValue(LootFilterSettings s) => IsEnabled(s) ? 1 : 0;
+            public override void SetValue(LootFilterSettings s, int val)
+            {
+                bool enable = val > 0;
+                if (IsAnySlayer) s.AnySlayer = enable;
+                else if (enable) s.EnabledSlayers.Add(Slayer);
+                else s.EnabledSlayers.Remove(Slayer);
+            }
+        }
+
         private static readonly FilterEntry[] FilterEntries = new FilterEntry[]
         {
             // Primary (11)
@@ -396,11 +450,49 @@ namespace Server.Engines.LootFilter
             new AbsorptionAttributeEntry("Cold Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterCold),
             new AbsorptionAttributeEntry("Poison Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterPoison),
             new AbsorptionAttributeEntry("Energy Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterEnergy),
-            new AbsorptionAttributeEntry("Kinetic Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterKinetic)
+            new AbsorptionAttributeEntry("Kinetic Eater", LootFilterCategory.Special, SAAbsorptionAttribute.EaterKinetic),
+
+            // Slayers - Page 0: Super Slayers & Master Toggle (11)
+            new SlayerFilterEntry("Any Slayer (All Types)", 0),
+            new SlayerFilterEntry("Repond (Humanoid)", SlayerName.Repond, 0),
+            new SlayerFilterEntry("Undead (Silver)", SlayerName.Silver, 0),
+            new SlayerFilterEntry("Reptilian Death", SlayerName.ReptilianDeath, 0),
+            new SlayerFilterEntry("Exorcism (Demon)", SlayerName.Exorcism, 0),
+            new SlayerFilterEntry("Arachnid Doom", SlayerName.ArachnidDoom, 0),
+            new SlayerFilterEntry("Elemental Ban", SlayerName.ElementalBan, 0),
+            new SlayerFilterEntry("Fey", SlayerName.Fey, 0),
+            new SlayerFilterEntry("Dinosaur", SlayerName.Dinosaur, 0),
+            new SlayerFilterEntry("Myrmidex", SlayerName.Myrmidex, 0),
+            new SlayerFilterEntry("Eodon", SlayerName.Eodon, 0),
+
+            // Slayers - Page 1: Humanoid, Demon & Dragon Mini Slayers (10)
+            new SlayerFilterEntry("Dragon Slaying", SlayerName.DragonSlaying, 1),
+            new SlayerFilterEntry("Orc Slaying", SlayerName.OrcSlaying, 1),
+            new SlayerFilterEntry("Ogre Trashing", SlayerName.OgreTrashing, 1),
+            new SlayerFilterEntry("Troll Slaughter", SlayerName.TrollSlaughter, 1),
+            new SlayerFilterEntry("Daemon Dismissal", SlayerName.DaemonDismissal, 1),
+            new SlayerFilterEntry("Gargoyles Foe", SlayerName.GargoylesFoe, 1),
+            new SlayerFilterEntry("Balron Damnation", SlayerName.BalronDamnation, 1),
+            new SlayerFilterEntry("Eodon Tribe", SlayerName.EodonTribe, 1),
+            new SlayerFilterEntry("Lizardman Slaughter", SlayerName.LizardmanSlaughter, 1),
+            new SlayerFilterEntry("Ophidian", SlayerName.Ophidian, 1),
+
+            // Slayers - Page 2: Reptile, Arachnid & Elemental Mini Slayers (11)
+            new SlayerFilterEntry("Snakes Bane", SlayerName.SnakesBane, 2),
+            new SlayerFilterEntry("Spiders Death", SlayerName.SpidersDeath, 2),
+            new SlayerFilterEntry("Scorpions Bane", SlayerName.ScorpionsBane, 2),
+            new SlayerFilterEntry("Terathan", SlayerName.Terathan, 2),
+            new SlayerFilterEntry("Blood Drinking", SlayerName.BloodDrinking, 2),
+            new SlayerFilterEntry("Earth Shatter", SlayerName.EarthShatter, 2),
+            new SlayerFilterEntry("Flame Dousing", SlayerName.FlameDousing, 2),
+            new SlayerFilterEntry("Water Dissipation", SlayerName.WaterDissipation, 2),
+            new SlayerFilterEntry("Elemental Health", SlayerName.ElementalHealth, 2),
+            new SlayerFilterEntry("Summer Wind", SlayerName.SummerWind, 2),
+            new SlayerFilterEntry("Vacuum", SlayerName.Vacuum, 2)
         };
         #endregion
 
-        public LootFilterGump(PlayerMobile pm, LootFilterCategory category = LootFilterCategory.Primary) : base(50, 50)
+        public LootFilterGump(PlayerMobile pm, LootFilterCategory category = LootFilterCategory.Primary, int slayerPage = 0) : base(50, 50)
         {
             m_Player = pm;
             m_Attachment = LootFilterAttachment.GetAttachment(pm);
@@ -409,6 +501,7 @@ namespace Server.Engines.LootFilter
                 m_Attachment.Settings = new LootFilterSettings();
             }
             m_Category = category;
+            m_SlayerPage = Math.Max(0, Math.Min(2, slayerPage));
 
             AddPage(0);
             
@@ -436,7 +529,7 @@ namespace Server.Engines.LootFilter
             AddImageTiled(15, 65, 140, 500, 2624);
             AddAlphaRegion(15, 65, 140, 500);
 
-            int y = 75;
+            int y = 70;
             AddCategoryButton(25, ref y, "Primary", LootFilterCategory.Primary);
             AddCategoryButton(25, ref y, "Combat", LootFilterCategory.Combat);
             AddCategoryButton(25, ref y, "Magic", LootFilterCategory.Magic);
@@ -445,16 +538,26 @@ namespace Server.Engines.LootFilter
             AddCategoryButton(25, ref y, "Hit Leech", LootFilterCategory.HitsLeech);
             AddCategoryButton(25, ref y, "Hit Magic", LootFilterCategory.HitsMagic);
             AddCategoryButton(25, ref y, "Special", LootFilterCategory.Special);
+            AddCategoryButton(25, ref y, "Slayers", LootFilterCategory.Slayers);
 
             // Right Content Frame
             AddImageTiled(165, 65, 420, 500, 2624);
             AddAlphaRegion(165, 65, 420, 500);
 
             // Content Headers
-            AddHtml(180, 75, 50, 20, "<BASEFONT COLOR=#FFFFFF>On/Off</BASEFONT>", false, false);
-            AddHtml(215, 75, 200, 20, "<BASEFONT COLOR=#FFFFFF>Property Name</BASEFONT>", false, false);
-            AddHtml(420, 75, 60, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Minimum</CENTER></BASEFONT>", false, false);
-            AddHtml(495, 75, 80, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Adjust</CENTER></BASEFONT>", false, false);
+            if (m_Category == LootFilterCategory.Slayers)
+            {
+                AddHtml(180, 75, 50, 20, "<BASEFONT COLOR=#FFFFFF>On/Off</BASEFONT>", false, false);
+                AddHtml(215, 75, 250, 20, "<BASEFONT COLOR=#FFFFFF>Slayer Name / Group</BASEFONT>", false, false);
+                AddHtml(470, 75, 100, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Status</CENTER></BASEFONT>", false, false);
+            }
+            else
+            {
+                AddHtml(180, 75, 50, 20, "<BASEFONT COLOR=#FFFFFF>On/Off</BASEFONT>", false, false);
+                AddHtml(215, 75, 200, 20, "<BASEFONT COLOR=#FFFFFF>Property Name</BASEFONT>", false, false);
+                AddHtml(420, 75, 60, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Minimum</CENTER></BASEFONT>", false, false);
+                AddHtml(495, 75, 80, 20, "<BASEFONT COLOR=#FFFFFF><CENTER>Adjust</CENTER></BASEFONT>", false, false);
+            }
             
             // Header Divider
             AddImageTiled(175, 95, 400, 2, 2624);
@@ -466,11 +569,36 @@ namespace Server.Engines.LootFilter
             AddImageTiled(175, 515, 400, 1, 2624);
             AddAlphaRegion(175, 515, 400, 1);
 
-            AddHtml(180, 527, 280, 20, "<BASEFONT COLOR=#999999>Type numbers or use arrows</BASEFONT>", false, false);
+            if (m_Category == LootFilterCategory.Slayers)
+            {
+                if (m_SlayerPage > 0)
+                {
+                    AddButton(180, 524, 4014, 4016, 6, GumpButtonType.Reply, 0); // Prev
+                    AddHtml(215, 526, 40, 20, "<BASEFONT COLOR=#FFFFFF>Prev</BASEFONT>", false, false);
+                }
 
-            // Apply Button
-            AddButton(475, 524, 4005, 4007, 5, GumpButtonType.Reply, 0);
-            AddHtml(510, 526, 60, 20, "<BASEFONT COLOR=#00FF00>Apply</BASEFONT>", false, false);
+                string pageDesc = m_SlayerPage switch
+                {
+                    0 => "Page 1 of 3 (Super Slayers)",
+                    1 => "Page 2 of 3 (Mini Slayers - Part 1)",
+                    _ => "Page 3 of 3 (Mini Slayers - Part 2)"
+                };
+                AddHtml(255, 526, 220, 20, $"<CENTER><BASEFONT COLOR=#FCCA03>{pageDesc}</BASEFONT></CENTER>", false, false);
+
+                if (m_SlayerPage < 2)
+                {
+                    AddButton(480, 524, 4005, 4007, 7, GumpButtonType.Reply, 0); // Next
+                    AddHtml(515, 526, 40, 20, "<BASEFONT COLOR=#FFFFFF>Next</BASEFONT>", false, false);
+                }
+            }
+            else
+            {
+                AddHtml(180, 527, 280, 20, "<BASEFONT COLOR=#999999>Type numbers or use arrows</BASEFONT>", false, false);
+
+                // Apply Button
+                AddButton(475, 524, 4005, 4007, 5, GumpButtonType.Reply, 0);
+                AddHtml(510, 526, 60, 20, "<BASEFONT COLOR=#00FF00>Apply</BASEFONT>", false, false);
+            }
         }
 
         private void AddCategoryButton(int x, ref int y, string label, LootFilterCategory cat)
@@ -479,23 +607,23 @@ namespace Server.Engines.LootFilter
             
             if (active)
             {
-                AddImageTiled(x - 5, y - 5, 120, 42, 2624);
-                AddAlphaRegion(x - 5, y - 5, 120, 42);
+                AddImageTiled(x - 5, y - 5, 120, 38, 2624);
+                AddAlphaRegion(x - 5, y - 5, 120, 38);
             }
 
-            AddButton(x, y + 6, active ? 4006 : 4005, active ? 4007 : 4006, 10 + (int)cat, GumpButtonType.Reply, 0);
+            AddButton(x, y + 4, active ? 4006 : 4005, active ? 4007 : 4006, 10 + (int)cat, GumpButtonType.Reply, 0);
             
-            AddHtml(x + 35, y + 6, 90, 40, active ? $"<BASEFONT COLOR=#FCCA03>{label}</BASEFONT>" : $"<BASEFONT COLOR=#999999>{label}</BASEFONT>", false, false);
+            AddHtml(x + 35, y + 4, 90, 30, active ? $"<BASEFONT COLOR=#FCCA03>{label}</BASEFONT>" : $"<BASEFONT COLOR=#999999>{label}</BASEFONT>", false, false);
 
-            y += 45;
+            y += 42;
 
             // Category Divider
-            if (cat != LootFilterCategory.Special)
+            if (cat != LootFilterCategory.Slayers)
             {
                 AddImageTiled(x - 5, y, 120, 2, 2624);
                 AddAlphaRegion(x - 5, y, 120, 2);
             }
-            y += 10;
+            y += 8;
         }
 
         private void RenderCategory(LootFilterCategory cat)
@@ -507,6 +635,9 @@ namespace Server.Engines.LootFilter
             {
                 var entry = FilterEntries[i];
                 if (entry.Category != cat)
+                    continue;
+
+                if (entry is SlayerFilterEntry sfe && sfe.Page != m_SlayerPage)
                     continue;
 
                 int val = entry.GetValue(m_Attachment.Settings);
@@ -531,17 +662,25 @@ namespace Server.Engines.LootFilter
             AddButton(x, y + 2, isEnabled ? 2154 : 2151, isEnabled ? 2154 : 2151, 1000 + index, GumpButtonType.Reply, 0);
             
             // Property Name
-            AddHtml(x + 35, y + 2, 200, 20, isEnabled ? $"<BASEFONT COLOR=#FFFFFF>{name}</BASEFONT>" : $"<BASEFONT COLOR=#777777>{name}</BASEFONT>", false, false);
+            AddHtml(x + 35, y + 2, 240, 20, isEnabled ? $"<BASEFONT COLOR=#FFFFFF>{name}</BASEFONT>" : $"<BASEFONT COLOR=#777777>{name}</BASEFONT>", false, false);
             
-            // Numeric Input Box
-            AddImageTiled(x + 240, y, 60, 24, 2624);
-            AddAlphaRegion(x + 240, y, 60, 24);
-            
-            AddTextEntry(x + 245, y + 2, 50, 20, 0x481, index + 1, val.ToString(), 5);
-            
-            // Adjust buttons: Up / Down
-            AddButton(x + 325, y + 3, 2435, 2436, 2000 + index, GumpButtonType.Reply, 0);
-            AddButton(x + 355, y + 3, 2437, 2438, 3000 + index, GumpButtonType.Reply, 0);
+            if (FilterEntries[index] is SlayerFilterEntry)
+            {
+                // Status badge
+                AddHtml(x + 290, y + 2, 100, 20, isEnabled ? "<BASEFONT COLOR=#00FF00>[ACTIVE]</BASEFONT>" : "<BASEFONT COLOR=#777777>[OFF]</BASEFONT>", false, false);
+            }
+            else
+            {
+                // Numeric Input Box
+                AddImageTiled(x + 240, y, 60, 24, 2624);
+                AddAlphaRegion(x + 240, y, 60, 24);
+                
+                AddTextEntry(x + 245, y + 2, 50, 20, 0x481, index + 1, val.ToString(), 5);
+                
+                // Adjust buttons: Up / Down
+                AddButton(x + 325, y + 3, 2435, 2436, 2000 + index, GumpButtonType.Reply, 0);
+                AddButton(x + 355, y + 3, 2437, 2438, 3000 + index, GumpButtonType.Reply, 0);
+            }
             
             y += 35;
         }
@@ -577,14 +716,28 @@ namespace Server.Engines.LootFilter
 
             if (id == 5) // Apply Button
             {
-                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage));
                 return;
             }
 
-            if (id >= 10 && id < 10 + 8) // Change Category
+            if (id == 6) // Prev Slayer Page
+            {
+                if (m_SlayerPage > 0)
+                    m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage - 1));
+                return;
+            }
+
+            if (id == 7) // Next Slayer Page
+            {
+                if (m_SlayerPage < 2)
+                    m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage + 1));
+                return;
+            }
+
+            if (id >= 10 && id < 10 + 9) // Change Category
             {
                 m_Category = (LootFilterCategory)(id - 10);
-                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category, 0));
                 return;
             }
 
@@ -593,7 +746,7 @@ namespace Server.Engines.LootFilter
             {
                 int index = id - 1000;
                 FilterEntries[index].Toggle(m_Attachment.Settings);
-                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage));
                 return;
             }
 
@@ -602,7 +755,7 @@ namespace Server.Engines.LootFilter
             {
                 int index = id - 2000;
                 FilterEntries[index].Adjust(m_Attachment.Settings, 1);
-                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage));
                 return;
             }
 
@@ -611,12 +764,12 @@ namespace Server.Engines.LootFilter
             {
                 int index = id - 3000;
                 FilterEntries[index].Adjust(m_Attachment.Settings, -1);
-                m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+                m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage));
                 return;
             }
 
             // Fallback: refresh gump rather than silently closing
-            m_Player.SendGump(new LootFilterGump(m_Player, m_Category));
+            m_Player.SendGump(new LootFilterGump(m_Player, m_Category, m_SlayerPage));
         }
 
         private void SaveTextEntries(RelayInfo info)

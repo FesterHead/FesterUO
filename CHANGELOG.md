@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- Enhanced ARPG Loot Filter ([`custom-scripts/LootFilter/`](custom-scripts/LootFilter/)) with comprehensive Slayer filtering support:
+  - Added dedicated **Slayers** category to the interactive gump (`[LootFilter`) featuring a 3-page paginated browser for 32 slayer options.
+  - Page 1 includes an "Any Slayer (All Types)" master toggle and all major Super Slayers (Repond, Undead/Silver, Reptilian Death, Exorcism/Demon, Arachnid Doom, Elemental Ban, Fey, Dinosaur, Myrmidex, Eodon).
+  - Pages 2 and 3 provide granular creature-specific mini slayer toggles (Dragon Slaying, Orc Slaying, Ogre Trashing, Daemon Dismissal, Balron Damnation, Lizardman Slaughter, Ophidian, Spiders Death, etc.) with binary `[ACTIVE]` / `[OFF]` status badges.
+  - Expanded filter evaluation scope in `LootFilterController.cs` to check `ISlayer` across Weapons, Spellbooks, and Musical Instruments, and added Spellbook AOS attributes to attribute evaluation.
+  - Bumped settings serialization to Version 3 in `LootFilterSettings.cs` to persist `AnySlayer` and `EnabledSlayers` across character saves.
 - Added Fundamental Skill Trainer NPC & Interactive Gump ([`SkillTrainer.cs`](custom-scripts/FesterUO/SkillTrainer.cs)) and configuration in [`Config/FesterUO/SkillTrainer.cfg`](Config/FesterUO/SkillTrainer.cfg):
   - Spawns an NPC mentor mobile (`SkillTrainer`) placed via `[add SkillTrainer` that provides rapid fundamental skill tutoring up to 40.0 for a flat fee of 1,000 gold per skill.
   - Interactive multi-page gump (`SkillTrainerGump`) automatically lists all character skills with current levels below 40.0 (`SkillTrainer.TargetSkillLevel=40.0`), sorted alphabetically with 10 skills per page and next/previous page navigation controls.

@@ -43,7 +43,8 @@ namespace Server.Engines.LootFilter
                 "<BASEFONT COLOR=#FCCA03>Global Toggle:</BASEFONT><br>" +
                 "The 'ENABLED' button at the top right of the main menu turns the ENTIRE filter on or off. If the filter is off, you will see all items normally regardless of your individual property settings.<br><br>" +
                 "<BASEFONT COLOR=#FCCA03>Important Notes:</BASEFONT><br>" +
-                "- The filter ONLY affects equipment (Weapons, Armor, Clothing, Jewelry). It will never hide Gold, Reagents, Potions, or other resources.<br>" +
+                "- The filter ONLY affects equipment (Weapons, Armor, Clothing, Jewelry, Spellbooks, Instruments). It will never hide Gold, Reagents, Potions, or other resources.<br>" +
+                "- Slayers category filters weapons, spellbooks, and instruments by Super Slayer groups, specific mini slayers, or an Any Slayer master toggle.<br>" +
                 "- Items inside your Backpack or Bank Box will always remain visible, even if they don't pass your strict filter rules." +
                 "</BASEFONT>", false, true);
 

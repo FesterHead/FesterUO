@@ -64,6 +64,15 @@ namespace Server.Engines.LootFilter
                 if (((BaseQuiver)item).ArtifactRarity > 0) return true;
                 isEquipment = true;
             }
+            else if (item is Spellbook)
+            {
+                if (((Spellbook)item).ArtifactRarity > 0) return true;
+                isEquipment = true;
+            }
+            else if (item is BaseInstrument)
+            {
+                isEquipment = true;
+            }
 
             // Also check for IsArtifact via reflection in case custom systems use it on non-standard items
             if (isEquipment)
@@ -82,6 +91,30 @@ namespace Server.Engines.LootFilter
 
             // If it's not equipment (like gold, potions, reagents, quest items), don't filter it
             if (!isEquipment) return true;
+
+            // Check Slayer Attributes
+            bool hasSlayerFilter = s.AnySlayer || s.EnabledSlayers.Count > 0;
+            if (hasSlayerFilter)
+            {
+                if (item is ISlayer islayer)
+                {
+                    bool match = false;
+                    if (s.AnySlayer && (islayer.Slayer != SlayerName.None || islayer.Slayer2 != SlayerName.None))
+                    {
+                        match = true;
+                    }
+                    else if (s.EnabledSlayers.Contains(islayer.Slayer) || s.EnabledSlayers.Contains(islayer.Slayer2))
+                    {
+                        match = true;
+                    }
+
+                    if (!match) return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
             // Check AOS Attributes
             foreach (var attr in s.EnabledAttributes)
@@ -184,6 +217,7 @@ namespace Server.Engines.LootFilter
             if (item is BaseClothing) return ((BaseClothing)item).Attributes[attr];
             if (item is BaseHat) return ((BaseHat)item).Attributes[attr];
             if (item is BaseQuiver) return ((BaseQuiver)item).Attributes[attr];
+            if (item is Spellbook) return ((Spellbook)item).Attributes[attr];
             return 0;
         }
 

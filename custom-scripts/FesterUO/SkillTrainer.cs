@@ -37,7 +37,6 @@ namespace Server.Custom.FesterUO
     public class SkillTrainer : BaseCreature
     {
         public override bool CanTeach => false;
-        public override bool ChangeRace => false;
         public override bool IsInvulnerable => true;
         public override bool ClickTitle => true;
         public override bool ShowFameTitle => false;

@@ -333,8 +333,9 @@ namespace Server.Custom.FesterUO
 
             AddPage(0);
 
-            // Sleek dark stone window background
-            AddBackground(0, 0, 530, 510, 0x2422);
+            // Textured dark slate window background
+            AddBackground(0, 0, 530, 510, 9200);
+            AddImageTiled(10, 10, 510, 490, 2624);
             AddAlphaRegion(10, 10, 510, 490);
 
             // Title & instructions
@@ -342,12 +343,12 @@ namespace Server.Custom.FesterUO
             AddHtml(20, 44, 490, 20, $"<center><basefont color=#CCCCCC>Train any skill below {targetLevel:F1} up to {targetLevel:F1} for {goldCost:#,0} gold</basefont></center>", false, false);
 
             // Player Status Bar (Gold Available & Skill Total/Cap)
-            AddImageTiled(25, 68, 480, 2, 0x2711);
+            AddImageTiled(25, 68, 480, 2, 9354);
             string goldInfo = $"<basefont color=#FFD700>Gold: </basefont><basefont color=#FFFFFF>{totalGold:#,0} gp</basefont>";
             string skillInfo = $"<basefont color=#87CEEB>Skills: </basefont><basefont color=#FFFFFF>{player.Skills.Total / 10.0:F1} / {player.Skills.Cap / 10.0:F1}</basefont>";
             AddHtml(30, 74, 230, 20, goldInfo, false, false);
             AddHtml(280, 74, 220, 20, $"<div align=right>{skillInfo}</div>", false, false);
-            AddImageTiled(25, 96, 480, 2, 0x2711);
+            AddImageTiled(25, 96, 480, 2, 9354);
 
             if (totalCount == 0)
             {
@@ -368,7 +369,7 @@ namespace Server.Custom.FesterUO
             AddLabel(265, 104, 0x481, "Current");
             AddLabel(350, 104, 0x481, "Target");
             AddLabel(435, 104, 0x481, "Cost");
-            AddImageTiled(25, 126, 480, 2, 0x2711);
+            AddImageTiled(25, 126, 480, 2, 9354);
 
             // Render skills for current page
             int startIndex = m_Page * PageSize;
@@ -379,12 +380,6 @@ namespace Server.Custom.FesterUO
             {
                 Skill sk = trainableSkills[startIndex + i];
                 int buttonID = 100 + (int)sk.SkillName;
-
-                // Subtle alternating row highlight
-                if (i % 2 == 1)
-                {
-                    AddImageTiled(25, rowY - 2, 480, 26, 0x0A3C);
-                }
 
                 // Train button (Jewel/arrow)
                 AddButton(30, rowY, 4005, 4007, buttonID, GumpButtonType.Reply, 0);
@@ -405,7 +400,7 @@ namespace Server.Custom.FesterUO
             }
 
             // Bottom Separator
-            AddImageTiled(25, 420, 480, 2, 0x2711);
+            AddImageTiled(25, 420, 480, 2, 9354);
 
             // Pagination Controls
             if (m_Page > 0)

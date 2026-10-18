@@ -1,3 +1,16 @@
+diff --git a/Scripts/Misc/SkillCheck.cs b/Scripts/Misc/SkillCheck.cs
+index 4cdecb78..d59ff2c8 100644
+--- a/Scripts/Misc/SkillCheck.cs
++++ b/Scripts/Misc/SkillCheck.cs
+@@ -117,7 +117,7 @@ namespace Server.Misc
+ 
+ 			#region Stygian Abyss
+ 			true, // Mysticism = 55
+-			true, // Imbuing = 56
++			false, // Imbuing = 56
+ 			false // Throwing = 57
+ 			#endregion
+ 		};
 diff --git a/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs b/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs
 index a59552cc..0706e84d 100644
 --- a/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs
@@ -24,3 +37,4 @@ index a59552cc..0706e84d 100644
  				{
  					success = true;
  					resType = typeof(MagicalResidue);
+

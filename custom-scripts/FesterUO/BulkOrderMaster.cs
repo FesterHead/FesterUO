@@ -48,8 +48,8 @@ namespace Server.Custom.FesterUO
         protected override List<SBInfo> SBInfos => m_SBInfos;
         public override void InitSBInfo() { }
 
-        public override bool CanBuy => false;
-        public override bool CanSell => false;
+        public override bool IsActiveBuyer => false;
+        public override bool IsActiveSeller => false;
         public override bool CanTeach => false;
         public override bool ChangeRace => false;
         public override bool IsInvulnerable => true;
@@ -86,7 +86,7 @@ namespace Server.Custom.FesterUO
 
             if (!Female)
             {
-                FacialHairItemID = Race.RandomFacialHair();
+                FacialHairItemID = Race.RandomFacialHair(false);
                 FacialHairHue = HairHue;
             }
 

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- Added Dedicated Bulk Order Master NPC & 8-in-1 Crafting Hub ([`BulkOrderMaster.cs`](custom-scripts/FesterUO/BulkOrderMaster.cs)) and configuration in [`Config/FesterUO/BulkOrders.cfg`](Config/FesterUO/BulkOrders.cfg):
+  - Spawns an artisan guildmaster mobile (`BulkOrderMaster`) placed via `[add BulkOrderMaster` (defaults to frozen, invulnerable, and blessed) designed for placement in town crafting centers, market squares, or player workshops.
+  - Interactive 8-in-1 Gump (`BulkOrderMasterGump`): Accessible via double-clicking, speech keywords ("bod", "order", "bulk", "craft", "reward", "trade"), or right-click context menu ("Bulk Order Info"). Displays an overview of all 8 craft disciplines (Blacksmithing, Tailoring, Tinkering, Carpentry, Bowcraft/Fletching, Alchemy, Inscription, Cooking) with current skill values, banked reward points, countdown timers, and cached deed indicators.
+  - One-Stop Claiming: Allows claiming ready Small and Large bulk orders directly from the unified gump across all 8 trades without traveling to disparate town shops.
+  - Universal Turn-In: Dragging and dropping any completed Small or Large BOD onto the Master automatically identifies the craft trade, verifies completion, deposits gold into the player's bank, awards fame, logs City Loyalty, and routes points into the player's BOD context.
+  - Publish 95 Reward Stores: Dedicated "Shop" buttons open the official bulk order reward catalog (`RewardsGump`) for each individual profession, spending banked points directly.
+  - Points Banking Mode Toggle: In-gump button allows instant cycling between Automatic (auto-bank points), Enabled (confirm banking vs immediate reward), and Disabled (immediate reward pick) modes.
+  - Universal Bribe Support: Right-click context menu ("Bribe") allows bribing the Master to upgrade existing bulk orders across all 8 disciplines.
+
 - Enhanced Resource Harvesting Yield ([`03-harvest-amount.patch`](patches/03-harvest-amount.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
   - Upgraded harvesting resource yields from a flat static roll (`MinYield=3`, `MaxYield=6`) to an accelerating, non-linear skill curve (`SkillScalingYield=True`, `MaxSkillYieldMultiplier=12.0`, `SkillCurveExponent=2.0`).
   - Skill progression starts at stock base game yield at $\le 50.0\%$ (1.0×, e.g. 1 ore / 10 logs) and accelerates across 7 ten-percent brackets up to 12.0× at Legendary 120.0% (50%: 1.0×, 60%: 1.2×, 70%: 1.9×, 80%: 3.0×, 90%: 4.6×, 100% GM: 6.6×, 110% Elder: 9.1×, 120% Legendary: 12.0×).

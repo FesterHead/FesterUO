@@ -15,10 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Points Banking Mode Toggle: In-gump button allows instant cycling between Automatic (auto-bank points), Enabled (confirm banking vs immediate reward), and Disabled (immediate reward pick) modes.
   - Universal Bribe Support: Right-click context menu ("Bribe") allows bribing the Master to upgrade existing bulk orders across all 8 disciplines.
 
+- Fixed Imbuing Skill Gain Mathematical Lockout ([`37-imbuing-skill-gain.patch`](patches/37-imbuing-skill-gain.patch)):
+  - Replaced the flawed ServUO `mins = 120 - (s * 1.2)` skill-check calculation in `Imbuing.TryImbueItem` with direct success chance evaluation `from.CheckSkill(SkillName.Imbuing, Math.Max(0.01, Math.Min(1.0, success / 100.0)))`, eliminating the bug that improperly classified all imbuing attempts between 45.0 and ~75.0 skill as "Too difficult" (0% gain chance).
+  - Raised the skill cap for low-weight Magical Residue item unraveling from 45.0 to 75.0, restoring a viable unraveling progression path into the mid-levels.
+
 - Parameterized Mounted Mining ([`05-mining-delay.patch`](patches/05-mining-delay.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
   - Enabled mounted mining on horseback, ethereal mounts, or standard steeds via `AllowMountedMining=True` in `Config/FesterUO/Harvest.cfg`.
   - Removes the retail restriction preventing characters from mining while mounted in `Mining.CheckHarvest` and `Mining.OnBadHarvestTarget`.
   - Preserves standard Gargoyle flying and polymorphed body restrictions.
+
+- Disabled Anti-Macro Gain Restrictions in [`Config/ServUO/PlayerCaps.cfg`](Config/ServUO/PlayerCaps.cfg):
+  - Set `EnableAntiMacro=False` to eliminate stationary tile restriction lockouts on skill gains, allowing continuous crafting, unraveling, and imbuing at home workbenches and Soulforges without moving every 3 actions.
 
 - Enhanced Resource Harvesting Yield ([`03-harvest-amount.patch`](patches/03-harvest-amount.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
   - Upgraded harvesting resource yields from a flat static roll (`MinYield=3`, `MaxYield=6`) to an accelerating, non-linear skill curve (`SkillScalingYield=True`, `MaxSkillYieldMultiplier=12.0`, `SkillCurveExponent=2.0`).

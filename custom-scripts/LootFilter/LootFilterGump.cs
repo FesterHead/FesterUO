@@ -577,12 +577,13 @@ namespace Server.Engines.LootFilter
                     AddHtml(215, 526, 40, 20, "<BASEFONT COLOR=#FFFFFF>Prev</BASEFONT>", false, false);
                 }
 
-                string pageDesc = m_SlayerPage switch
-                {
-                    0 => "Page 1 of 3 (Super Slayers)",
-                    1 => "Page 2 of 3 (Mini Slayers - Part 1)",
-                    _ => "Page 3 of 3 (Mini Slayers - Part 2)"
-                };
+                string pageDesc;
+                if (m_SlayerPage == 0)
+                    pageDesc = "Page 1 of 3 (Super Slayers)";
+                else if (m_SlayerPage == 1)
+                    pageDesc = "Page 2 of 3 (Mini Slayers - Part 1)";
+                else
+                    pageDesc = "Page 3 of 3 (Mini Slayers - Part 2)";
                 AddHtml(255, 526, 220, 20, $"<CENTER><BASEFONT COLOR=#FCCA03>{pageDesc}</BASEFONT></CENTER>", false, false);
 
                 if (m_SlayerPage < 2)

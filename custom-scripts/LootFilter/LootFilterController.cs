@@ -66,7 +66,6 @@ namespace Server.Engines.LootFilter
             }
             else if (item is Spellbook)
             {
-                if (((Spellbook)item).ArtifactRarity > 0) return true;
                 isEquipment = true;
             }
             else if (item is BaseInstrument)

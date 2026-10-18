@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- Enhanced Resource Harvesting Yield ([`03-harvest-amount.patch`](patches/03-harvest-amount.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
+  - Upgraded harvesting resource yields from a flat static roll (`MinYield=3`, `MaxYield=6`) to an accelerating, non-linear skill curve (`SkillScalingYield=True`, `MaxSkillYieldMultiplier=12.0`, `SkillCurveExponent=2.0`).
+  - Skill progression starts at stock base game yield at $\le 50.0\%$ (1.0×, e.g. 1 ore / 10 logs) and accelerates across 7 ten-percent brackets up to 12.0× at Legendary 120.0% (50%: 1.0×, 60%: 1.2×, 70%: 1.9×, 80%: 3.0×, 90%: 4.6×, 100% GM: 6.6×, 110% Elder: 9.1×, 120% Legendary: 12.0×).
+  - Implemented Mode B vein preservation (`DrainVeinWithBonusYield=False`): harvesters extract multiplied resources while draining the node at standard retail consumption rates, allowing high-skill players to reap massive resource windfalls from rare veins without exhausting the node in a few swings.
+  - Automatically scales Felucca resource yields proportionally and preserves Human racial bonuses and Woodman's Talisman rewards.
+
 - Enhanced ARPG Loot Filter ([`custom-scripts/LootFilter/`](custom-scripts/LootFilter/)) with comprehensive Slayer filtering support:
   - Added dedicated **Slayers** category to the interactive gump (`[LootFilter`) featuring a 3-page paginated browser for 32 slayer options.
   - Page 1 includes an "Any Slayer (All Types)" master toggle and all major Super Slayers (Repond, Undead/Silver, Reptilian Death, Exorcism/Demon, Arachnid Doom, Elemental Ban, Fey, Dinosaur, Myrmidex, Eodon).

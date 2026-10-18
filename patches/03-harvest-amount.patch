@@ -1,14 +1,68 @@
 diff --git a/Scripts/Services/Harvest/HarvestSystem.cs b/Scripts/Services/Harvest/HarvestSystem.cs
+index d34a7e1b..52074965 100644
 --- a/Scripts/Services/Harvest/HarvestSystem.cs
 +++ b/Scripts/Services/Harvest/HarvestSystem.cs
-@@ -164,7 +164,9 @@ namespace Server.Engines.Harvest
+@@ -164,8 +164,37 @@ namespace Server.Engines.Harvest
                      }
                      else
                      {
 -                        int amount = def.ConsumedPerHarvest;
-+                        int minH = Config.Get("Harvest.MinYield", 3);
-+                        int maxH = Config.Get("Harvest.MaxYield", 6);
-+                        int amount = Utility.RandomMinMax(minH, maxH);
-                         int feluccaAmount = def.ConsumedPerFeluccaHarvest;
+-                        int feluccaAmount = def.ConsumedPerFeluccaHarvest;
++                        int baseConsumed = def.ConsumedPerHarvest;
++                        int consumed = baseConsumed;
++                        int amount = baseConsumed;
++
++                        if (Config.Get("Harvest.SkillScalingYield", true))
++                        {
++                            double skill = from.Skills[def.Skill].Value;
++                            if (skill >= 60.0)
++                            {
++                                int tier = (int)Math.Min(7, (skill - 50.0) / 10.0);
++                                double maxMult = Config.Get("Harvest.MaxSkillYieldMultiplier", 12.0);
++                                double exponent = Config.Get("Harvest.SkillCurveExponent", 2.0);
++
++                                double progress = tier / 7.0;
++                                double mult = 1.0 + (maxMult - 1.0) * Math.Pow(progress, exponent);
++
++                                amount = Math.Max(baseConsumed, (int)Math.Round(baseConsumed * mult));
++                            }
++                        }
++
++                        bool drainVein = Config.Get("Harvest.DrainVeinWithBonusYield", false);
++                        if (drainVein)
++                        {
++                            amount = Math.Min(amount, bank.Current);
++                            consumed = amount;
++                        }
++
++                        int feluccaRatio = (def.ConsumedPerFeluccaHarvest > 0 && baseConsumed > 0)
++                            ? (def.ConsumedPerFeluccaHarvest / baseConsumed)
++                            : 2;
++                        int feluccaAmount = amount * feluccaRatio;
  
                          if (item is BaseGranite)
+                             feluccaAmount = 3;
+@@ -181,11 +210,11 @@ namespace Server.Engines.Harvest
+                             bool eligableForRacialBonus = (def.RaceBonus && from.Race == Race.Human);
+                             bool inFelucca = map == Map.Felucca && !Siege.SiegeShard;
+ 
+-                            if (eligableForRacialBonus && inFelucca && bank.Current >= feluccaRacialAmount && 0.1 > Utility.RandomDouble())
++                            if (eligableForRacialBonus && inFelucca && (bank.Current >= feluccaRacialAmount || !drainVein) && 0.1 > Utility.RandomDouble())
+                                 item.Amount = feluccaRacialAmount;
+-                            else if (inFelucca && bank.Current >= feluccaAmount)
++                            else if (inFelucca && (bank.Current >= feluccaAmount || !drainVein))
+                                 item.Amount = feluccaAmount;
+-                            else if (eligableForRacialBonus && bank.Current >= racialAmount && 0.1 > Utility.RandomDouble())
++                            else if (eligableForRacialBonus && (bank.Current >= racialAmount || !drainVein) && 0.1 > Utility.RandomDouble())
+                                 item.Amount = racialAmount;
+                             else
+                                 item.Amount = amount;
+@@ -196,7 +225,7 @@ namespace Server.Engines.Harvest
+ 
+                         if (from.AccessLevel == AccessLevel.Player)
+                         {
+-                            bank.Consume(amount, from);
++                            bank.Consume(consumed, from);
+                         }
+ 
+                         if (Give(from, item, def.PlaceAtFeetIfFull))

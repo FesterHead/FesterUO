@@ -15,6 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Points Banking Mode Toggle: In-gump button allows instant cycling between Automatic (auto-bank points), Enabled (confirm banking vs immediate reward), and Disabled (immediate reward pick) modes.
   - Universal Bribe Support: Right-click context menu ("Bribe") allows bribing the Master to upgrade existing bulk orders across all 8 disciplines.
 
+- Parameterized Mounted Mining ([`05-mining-delay.patch`](patches/05-mining-delay.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
+  - Enabled mounted mining on horseback, ethereal mounts, or standard steeds via `AllowMountedMining=True` in `Config/FesterUO/Harvest.cfg`.
+  - Removes the retail restriction preventing characters from mining while mounted in `Mining.CheckHarvest` and `Mining.OnBadHarvestTarget`.
+  - Preserves standard Gargoyle flying and polymorphed body restrictions.
+
 - Enhanced Resource Harvesting Yield ([`03-harvest-amount.patch`](patches/03-harvest-amount.patch)) and configuration in [`Config/FesterUO/Harvest.cfg`](Config/FesterUO/Harvest.cfg):
   - Upgraded harvesting resource yields from a flat static roll (`MinYield=3`, `MaxYield=6`) to an accelerating, non-linear skill curve (`SkillScalingYield=True`, `MaxSkillYieldMultiplier=12.0`, `SkillCurveExponent=2.0`).
   - Skill progression starts at stock base game yield at $\le 50.0\%$ (1.0×, e.g. 1 ore / 10 logs) and accelerates across 7 ten-percent brackets up to 12.0× at Legendary 120.0% (50%: 1.0×, 60%: 1.2×, 70%: 1.9×, 80%: 3.0×, 90%: 4.6×, 100% GM: 6.6×, 110% Elder: 9.1×, 120% Legendary: 12.0×).

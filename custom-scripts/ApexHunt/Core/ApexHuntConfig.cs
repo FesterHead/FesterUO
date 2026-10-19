@@ -38,7 +38,7 @@ namespace Server.Custom.ApexHunt
         public static TimeSpan MinEventInterval { get; set; } = TimeSpan.FromHours(2);  // Minimum quiet period between events
         public static int MinCheckMinutes { get; set; } = 45;                           // Randomized check variance min (45 mins)
         public static int MaxCheckMinutes { get; set; } = 75;                           // Randomized check variance max (75 mins)
-        public static double TriggerChance { get; set; } = 0.10;                        // 10% chance to trigger when checking
+        public static double TriggerChance { get; set; } = 0.02;                        // 2% chance to trigger when checking
         public static int MinOnlinePlayers { get; set; } = 1;                           // Minimum online characters required to trigger
 
         public static TimeSpan GetRandomCheckInterval()

@@ -1,15 +1,16 @@
 diff --git a/Scripts/Services/Harvest/Mining.cs b/Scripts/Services/Harvest/Mining.cs
 --- a/Scripts/Services/Harvest/Mining.cs
 +++ b/Scripts/Services/Harvest/Mining.cs
-@@ -8,6 +8,7 @@ namespace Server.Engines.Harvest
+@@ -8,6 +8,8 @@ namespace Server.Engines.Harvest
  {
      public class Mining : HarvestSystem
      {
 +        private static double GetMiningDelay() => Config.Get("Harvest.MiningDelay", 1.0);
++        private static bool AllowMountedMining => Config.Get("Harvest.AllowMountedMining", true);
          private static Mining m_System;
  
          public static Mining System
-@@ -62,8 +63,8 @@ namespace Server.Engines.Harvest
+@@ -62,8 +64,8 @@ namespace Server.Engines.Harvest
              oreAndStone.EffectActions = new int[] { Core.SA ? 3 : 11 };
              oreAndStone.EffectSounds = new int[] { 0x125, 0x126 };
              oreAndStone.EffectCounts = new int[] { 1 };
@@ -20,7 +21,7 @@ diff --git a/Scripts/Services/Harvest/Mining.cs b/Scripts/Services/Harvest/Minin
  
              oreAndStone.NoResourcesMessage = 503040; // There is no metal here to mine.
              oreAndStone.DoubleHarvestMessage = 503042; // Someone has gotten to the metal before you.
-@@ -156,8 +157,8 @@ namespace Server.Engines.Harvest
+@@ -156,8 +158,8 @@ namespace Server.Engines.Harvest
              sand.EffectActions = new int[] { Core.SA ? 3 : 11 };
              sand.EffectSounds = new int[] { 0x125, 0x126 };
              sand.EffectCounts = new int[] { 6 };
@@ -31,3 +32,22 @@ diff --git a/Scripts/Services/Harvest/Mining.cs b/Scripts/Services/Harvest/Minin
  
              sand.NoResourcesMessage = 1044629; // There is no sand here to mine.
              sand.DoubleHarvestMessage = 1044629; // There is no sand here to mine.
+@@ -288,7 +290,7 @@ namespace Server.Engines.Harvest
+                 OnBadHarvestTarget(from, tool, toHarvest);
+                 return false;
+             }
+-            else if (from.Mounted)
++            else if (from.Mounted && !AllowMountedMining)
+             {
+                 from.SendLocalizedMessage(501864); // You can't mine while riding.
+                 return false;
+@@ -497,7 +499,7 @@ namespace Server.Engines.Harvest
+             {
+                 from.SendLocalizedMessage(501863); // You can't mine that.
+             }
+-            else if (from.Mounted || from.Flying)
++            else if ((from.Mounted && !AllowMountedMining) || from.Flying)
+             {
+                 from.SendLocalizedMessage(501864); // You can't dig while riding or flying.
+             }
+

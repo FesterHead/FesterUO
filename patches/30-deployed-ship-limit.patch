@@ -1,0 +1,95 @@
+diff --git a/Scripts/Multis/Boats/BaseBoat.cs b/Scripts/Multis/Boats/BaseBoat.cs
+index 2d6f31b5..7bf5f850 100644
+--- a/Scripts/Multis/Boats/BaseBoat.cs
++++ b/Scripts/Multis/Boats/BaseBoat.cs
+@@ -2233,16 +2233,28 @@ namespace Server.Multis
+         }
+ 
+         public static bool HasBoat(Mobile from)
++        {
++            return Boats.Any(boat => boat.Owner == from && !boat.Deleted && boat.Map != Map.Internal && !boat.IsRowBoat);
++        }
++
++        public static bool HasReachedBoatLimit(Mobile from)
+         {
+             if (from.AccessLevel > AccessLevel.Player)
+                 return false;
+ 
+-            return Boats.Any(boat => boat.Owner == from && !boat.Deleted && boat.Map != Map.Internal && !boat.IsRowBoat);
++            int maxShips = Config.Get("Housing.MaxDeployedShips", 1);
++            if (maxShips <= 0)
++                return false;
++
++            return Boats.Count(boat => boat.Owner == from && !boat.Deleted && boat.Map != Map.Internal && !boat.IsRowBoat) >= maxShips;
+         }
+ 
+         public static BaseBoat GetBoat(Mobile from)
+         {
+-            return Boats.FirstOrDefault(boat => boat.Owner == from && !boat.Deleted && boat.Map != Map.Internal && !boat.IsRowBoat);
++            return Boats.Where(boat => boat.Owner == from && !boat.Deleted && boat.Map != Map.Internal && !boat.IsRowBoat)
++                        .OrderBy(boat => boat.Map == from.Map ? 0 : 1)
++                        .ThenBy(boat => boat.Map == from.Map ? (int)from.GetDistanceToSqrt(boat.Location) : int.MaxValue)
++                        .FirstOrDefault();
+         }
+ 
+         public static bool IsValidLocation(Point3D p, Map map)
+diff --git a/Scripts/Multis/Boats/BaseBoatDeed.cs b/Scripts/Multis/Boats/BaseBoatDeed.cs
+index ae470058..a1c47493 100644
+--- a/Scripts/Multis/Boats/BaseBoatDeed.cs
++++ b/Scripts/Multis/Boats/BaseBoatDeed.cs
+@@ -73,7 +73,7 @@ namespace Server.Multis
+             {
+                 from.SendLocalizedMessage(1010567, null, 0x25); // You may not place a boat from this location.
+             }
+-            else if (Core.HS && BaseBoat.HasBoat(from) && !Boat.IsRowBoat)
++            else if (Core.HS && BaseBoat.HasReachedBoatLimit(from) && !Boat.IsRowBoat)
+             {
+                 from.SendLocalizedMessage(1116758); // You already have a ship deployed!
+             }
+diff --git a/Scripts/Multis/Boats/BaseDockedBoat.cs b/Scripts/Multis/Boats/BaseDockedBoat.cs
+index 9cad6156..983dadcd 100644
+--- a/Scripts/Multis/Boats/BaseDockedBoat.cs
++++ b/Scripts/Multis/Boats/BaseDockedBoat.cs
+@@ -100,7 +100,7 @@ namespace Server.Multis
+             {
+                 from.SendLocalizedMessage(1042001); // That must be in your pack for you to use it.
+             }
+-            else if (Core.HS && BaseBoat.HasBoat(from))
++            else if (Core.HS && BaseBoat.HasReachedBoatLimit(from))
+             {
+                 from.SendLocalizedMessage(1116758); //You already have a ship deployed!
+             }
+diff --git a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs
+index b90c7e43..2def7d40 100644
+--- a/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
++++ b/Scripts/Services/Expansions/High Seas/Quests/ProfessionFishQuest/FishQuestHelper.cs	
+@@ -311,28 +311,7 @@ namespace Server.Engines.Quests
+ 
+         public static BaseBoat GetBoat(Mobile from)
+         {
+-            List<BaseBoat> boats = new List<BaseBoat>();
+-
+-            foreach (BaseBoat boat in BaseBoat.Boats) 
+-            {
+-                if (boat.Owner == from && !boat.IsRowBoat)
+-                    boats.Add(boat);
+-            }
+-
+-            BaseBoat closest = null;
+-            int range = 5000;
+- 
+-            foreach (BaseBoat boat in boats)
+-            {
+-                int dist = (int)from.GetDistanceToSqrt(boat.Location);
+-                if (closest == null || dist < range)
+-                {
+-                    closest = boat;
+-                    range = dist;
+-                }
+-            }
+-
+-            return closest;
++            return BaseBoat.GetBoat(from);
+         }
+ 
+         public static bool HasFishQuest(PlayerMobile player, MondainQuester quester, bool inRange)

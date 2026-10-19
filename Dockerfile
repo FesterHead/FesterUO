@@ -49,6 +49,7 @@ ENV DOTNET_CLI_HOME=/server/.dotnet \
     DOTNET_NOLOGO=true \
     DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true \
     HOME=/server
 
 # Configure client path and permissions for non-root host user

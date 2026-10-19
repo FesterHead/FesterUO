@@ -37,3 +37,4 @@ services:
       - "UMASK=${UMASK:-022}"
       - "DOTNET_CLI_HOME=/server/.dotnet"
       - "HOME=/server"
+      - "DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=true"

@@ -15,7 +15,7 @@ This directory (`servuo/custom-scripts/ApexHunt/`) contains the **Apex Hunt** au
 ## System Overview
 
 Apex Hunt is an automated hunting competition system for ServUO designed to bring excitement and activity to the wilderness:
-1. **Dynamic Triggering**: When at least one player character is online and the 2-hour minimum cooldown between events has elapsed, the system performs a 10% chance roll to trigger an event, retrying with a randomized 45 to 75 minute variance between checks if the roll fails.
+1. **Dynamic Triggering**: When at least one player character is online and the 2-hour minimum cooldown between events has elapsed, the system performs a 2% chance roll to trigger an event, retrying with a randomized 45 to 75 minute variance between checks if the roll fails.
 2. **Pre-Event Countdown**: Once triggered, global broadcast warnings notify online hunters at 10 minutes, 5 minutes, and 1 minute before the cull begins, providing preparation time.
 3. **The Hunt**: The system randomly picks a target creature from a 4-tier roster (Swarm, Beast/Elemental, High Threat, Boss/Ancient), determines a randomized kill goal, and opens a floating HUD widget for all active players.
 4. **Tie-Breaker Mechanic**: The first hunter to hit the target goal triggers a 60-second tie-breaker window, allowing other hunters a chance to challenge for 1st, 2nd, or 3rd place.
@@ -43,7 +43,7 @@ Apex Hunt is an automated hunting competition system for ServUO designed to brin
 | `MinCheckMinutes` | `45` | Minimum randomized delay (in minutes) between trigger checks. |
 | `MaxCheckMinutes` | `75` | Maximum randomized delay (in minutes) between trigger checks. |
 | `CheckFrequency` | `60 minutes` | Backward compatibility property representing the average check interval. |
-| `TriggerChance` | `0.10` (10%) | Probability of triggering a hunt when checking. |
+| `TriggerChance` | `0.02` (2%) | Probability of triggering a hunt when checking. |
 | `MinOnlinePlayers` | `1` | Minimum number of online characters required for a trigger roll to succeed. |
 | `EventFrequency` | `2 hours` | Backward compatibility alias mapping directly to `MinEventInterval`. |
 | `MinDurationMinutes` | `25` | Minimum duration of a hunt in minutes. |

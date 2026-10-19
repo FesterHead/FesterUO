@@ -1,6 +1,6 @@
 # ServUO Configuration Guide
 
-This directory (`servuo/Config/`) contains the runtime configuration files mounted into the ServUO container at `/server/Config/`.
+This directory (`Config/`) contains the runtime configuration files mounted into the ServUO container at `/server/Config/`.
 
 ServUO dynamically parses every `*.cfg` file in this directory and its subdirectories upon startup. Each file defines a configuration **scope** matching its filename or directory hierarchy. Values are accessed in C# scripts via:
 
@@ -18,7 +18,7 @@ The configuration files are organized into functional subdirectories, each with 
    Contains the 14 base ServUO platform configuration files (`Accounts.cfg`, `AutoRestart.cfg`, `AutoSave.cfg`, `Champions.cfg`, `DataPath.cfg`, `Expansion.cfg`, `General.cfg`, `Housing.cfg`, `Loot.cfg`, `PlayerCaps.cfg`, `Server.cfg`, `TreasureMaps.cfg`, `Vendors.cfg`, `VetRewards.cfg`) tuned for this shard.
 
 2. **[`FesterUO/`](FesterUO/README.md)**:
-   Contains custom shard progression, harvesting, and stable stall configurations (`Harvest.cfg`, `Stables.cfg`) consumed by custom systems and patches.
+   Contains custom shard progression, crop spawning, harvesting, stable stall, skill training, and dye tub configurations (`Crops.cfg`, `Harvest.cfg`, `HoldingBox.cfg`, `Reagents.cfg`, `SkillTrainer.cfg`, `SlowSkillGrind.cfg`, `Stables.cfg`, `TrashBarrel.cfg`, `UniversalDyeTub.cfg`) consumed by custom systems and patches.
 
 3. **[`PetExchange/`](PetExchange/README.md)**:
    Contains configuration files for the Pet Exchange Hitching Post house addon (`PetExchange.cfg`).
@@ -33,9 +33,9 @@ The configuration files are organized into functional subdirectories, each with 
 
 ## Modifying Configurations
 
-1. Edit any `.cfg` file directly on the host in `servuo/Config/`.
+1. Edit any `.cfg` file directly on the host in `Config/`.
 2. Changes to `.cfg` files take effect whenever the container restarts:
    ```bash
-   docker compose restart servuo
+   docker compose restart festeruo
    ```
 3. No image rebuilding or patch recompilation is required when altering values in these `.cfg` files.

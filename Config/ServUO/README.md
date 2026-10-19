@@ -1,6 +1,6 @@
 # Base ServUO Platform Configurations
 
-This directory (`servuo/Config/ServUO/`) contains the base ServUO platform configuration files that originate directly from the upstream [ServUO Core](https://github.com/ServUO/ServUO) distribution, tuned specifically for the **FesterUO** private shard.
+This directory (`Config/ServUO/`) contains the base ServUO platform configuration files that originate directly from the upstream [ServUO Core](https://github.com/ServUO/ServUO) distribution, tuned specifically for the **FesterUO** private shard.
 
 ---
 
@@ -13,12 +13,12 @@ This directory (`servuo/Config/ServUO/`) contains the base ServUO platform confi
 | [`AutoSave.cfg`](AutoSave.cfg) | `AutoSave` | World save interval (15 minutes) and quiet save warnings. |
 | [`Champions.cfg`](Champions.cfg) | `Champions` | Duo-scaled kill counts (64/32/16/8 per tier) and 2 Power/Stat scrolls per boss kill. |
 | [`DataPath.cfg`](DataPath.cfg) | `DataPath` | Sets `CustomPath=/server/Client` to mount client UOP/MUL asset files. |
-| [`Expansion.cfg`](Expansion.cfg) | `Expansion` | Active expansion set to `CurrentExpansion=TOL` (Time of Legends). |
+| [`Expansion.cfg`](Expansion.cfg) | `Expansion` | Active expansion set to `CurrentExpansion=TOL` (Time of Legends), Arcane Circle duo focus, direct Sea Market recall/mark (`AllowSeaMarketRecall=True`), automated fishing quest fulfillment (`FishQuestAutoComplete=True`), and remote vessel quest acceptance (`FishQuestRequireNearbyBoat=False`). |
 | [`General.cfg`](General.cfg) | `General` | Felucca red restriction toggles and ground item decay intervals (`DefaultItemDecayTime=60`). |
-| [`Housing.cfg`](Housing.cfg) | `Housing` | Sets `AccountHouseLimit=1`. |
+| [`Housing.cfg`](Housing.cfg) | `Housing` | Sets `AccountHouseLimit=1`, disables unrefreshed house/boat decay (`DecayEnabled=False`), and allows unlimited active deployed ships (`MaxDeployedShips=0`). |
 | [`Loot.cfg`](Loot.cfg) | `Loot` | Enables `CanPOFJewelry=True` and configures Felucca luck bonus (+1000). |
-| [`PlayerCaps.cfg`](PlayerCaps.cfg) | `PlayerCaps` | Total stat cap (900), individual caps (250 base, 300 max), total skill cap (2400.0%), anti-macro disabled, and immediate stat gain. |
+| [`PlayerCaps.cfg`](PlayerCaps.cfg) | `PlayerCaps` | Total stat cap (900), individual caps (250 base, 300 max), total skill cap (2400.0%), base individual skill cap (100.0% GM; up to 120.0% via Power Scrolls or Slow Skill Grind), anti-macro enabled, and paced stat gain delays. |
 | [`Server.cfg`](Server.cfg) | `Server` | Shard name `FesterUO`, port `2593`, and Docker host LAN routing (`PrivateAddress=192.168.86.48`). |
-| [`TreasureMaps.cfg`](TreasureMaps.cfg) | `TreasureMaps` | Enables modern treasure map chest system and lowers chest reset timer to 7 days. |
+| [`TreasureMaps.cfg`](TreasureMaps.cfg) | `TreasureMaps` | Enables modern treasure map chest system, lowers chest reset timer to 7 days, allows any character to use decoded treasure maps (`DecodedMapsOpenToAll=True`), parameterizes gold upgrades for treasure maps (10k gp/lvl up to Level 6) and SOS messages (10k gp/lvl up to Level 3), parameterizes World Map craft skill cap (`WorldMapMaxSkill=100.0`) to allow GM Cartography via crafting, provides enhanced equipment loot quality tables (`EnhancedLootQuality=True`, `LootBudgetBonus=100`), enables opener Luck & Felucca budget rules for chest reforging (`ApplyPlayerLuck=True`), and scales SOS magical equipment drop quantities (`SOSItemCountMultiplier=2.0`). |
 | [`Vendors.cfg`](Vendors.cfg) | `Vendors` | Sets NPC restock delay to 15 minutes, configures 640 commodity/reagent stock, disables restock decay, and configures Powder of Fortifying. |
 | [`VetRewards.cfg`](VetRewards.cfg) | `VetRewards` | Sets reward intervals to 30 days per tier and locks veteran skill cap bonuses to preserve caps. |

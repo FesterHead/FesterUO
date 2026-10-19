@@ -1,0 +1,16 @@
+diff --git a/Scripts/Services/Expansions/High Seas/Regions/SeaMarket.cs b/Scripts/Services/Expansions/High Seas/Regions/SeaMarket.cs
+index 7612de50..0594de30 100644
+--- a/Scripts/Services/Expansions/High Seas/Regions/SeaMarket.cs	
++++ b/Scripts/Services/Expansions/High Seas/Regions/SeaMarket.cs	
+@@ -79,6 +79,11 @@ namespace Server.Regions
+ 
+         public override bool CheckTravel(Mobile traveller, Point3D p, TravelCheckType type)
+         {
++            if (Config.Get("Expansion.AllowSeaMarketRecall", true))
++            {
++                return base.CheckTravel(traveller, p, type);
++            }
++
+             switch (type)
+             {
+                 case TravelCheckType.RecallTo:

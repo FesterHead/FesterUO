@@ -22,7 +22,6 @@ This directory (`servuo/custom-scripts/zerodowned/`) contains custom scripts and
 
 - **Instant Boat Transport**: While standing on a stationary boat, double-click the transporter and target an SOS in your backpack. The boat automatically calculates open-water clearance near the sunken ship coordinates and teleports directly to the target location with nautical splash animations.
 - **Pre-flight Validations**: Checks that the player is not criminal, overloaded, in combat, in jail, casting a spell, or on a moving vessel.
-- **Facet Safety**: Verifies that the SOS destination matches the boat's current facet (e.g. Trammel vs. Felucca) before calculating displacement.
 - **Unlimited Usage**: No charges required; players can freely decode and navigate between SOS salvage coordinates.
 - **Procurement & Vendor Stock**: Sold by NPC Fishermen for 10,000 gold (configured via `SOSDecoderCost` in `servuo/Config/ServUO/Vendors.cfg`). Staff can also spawn it via `[add SOSDecoder`.
 
@@ -32,7 +31,9 @@ This directory (`servuo/custom-scripts/zerodowned/`) contains custom scripts and
 
 - **Moongate to Dig Site**: Double-click from your backpack and target a Treasure Map. Opens a 30-second timed moongate directly onto the chest coordinates (automatically calculating ground Z-elevation).
 - **Auto-Decodes Undeciphered Maps**: Targeting an un-decoded map marks it decoded by the player so you don't need to manually decipher it first.
+- **Universal Decoded Map Access**: When `DecodedMapsOpenToAll=True` in `Config/ServUO/TreasureMaps.cfg`, players can use the transporter on maps decoded by other characters without restriction.
 - **Completion Check**: Prevents opening gates to already completed/looted treasure maps.
 - **Pre-flight Validations**: Checks that the player is not criminal, overloaded, in combat, in jail, or casting a spell.
 - **Unlimited Usage**: No charges required; players can freely decode and gate to any of their treasure maps.
 - **Procurement & Vendor Stock**: Sold by NPC Mapmakers for 10,000 gold (configured via `TreasureMapDecoderCost` in `servuo/Config/ServUO/Vendors.cfg`). Staff can also spawn it via `[add TreasureMapDecoder`.
+

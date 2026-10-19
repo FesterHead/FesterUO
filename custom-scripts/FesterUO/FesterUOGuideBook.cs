@@ -1,5 +1,6 @@
 using System;
 using Server;
+using Server.Commands;
 using Server.Items;
 
 namespace Server.Custom
@@ -32,8 +33,8 @@ namespace Server.Custom
                 "Holds 1,000 items with",
                 "100% weight reduction.",
                 "",
-                "Accepts raw resources",
-                "and recall runes.",
+                "Accepts raw resources,",
+                "maps, scrolls, & runes.",
                 "",
                 "Keep it in your pack!"),
             new BookPageInfo(
@@ -174,6 +175,27 @@ namespace Server.Custom
                 "* 16 blank recall runes",
                 "  inside your satchel!"),
             new BookPageInfo(
+                "UNIVERSAL DYE TUB",
+                "-------------------",
+                "Every character starts",
+                "with a blessed Universal",
+                "Highlander Dye Tub!",
+                "",
+                "* Dyes clothes, armor,",
+                "  weapons, containers,",
+                "  books, mounts, & pets!"),
+            new BookPageInfo(
+                "DYE TUB DETAILS",
+                "-------------------",
+                "* Double-click tub to",
+                "  dye equipment or pets",
+                "  (1,000 gold per use).",
+                "",
+                "* Right-click -> Set Hue",
+                "  (or use standard Dyes)",
+                "  to open the 16-color",
+                "  gradient palette!"),
+            new BookPageInfo(
                 "HUNTER'S BESTIARY",
                 "-------------------",
                 "Type [Bestiary to open",
@@ -206,27 +228,70 @@ namespace Server.Custom
             new BookPageInfo(
                 "PLAYER COMMANDS 2",
                 "-------------------",
-                "[tillerman",
-                "  Ship helm controls.",
-                "",
-                "[Corpse",
-                "  Points a quest arrow",
-                "  to your fallen body.",
+                "[say",
+                "  House & boat gump.",
                 "",
                 "[GetSanctuary",
-                "  Claims your talisman."),
+                "  Claims your talisman.",
+                "",
+                "[LootFilter",
+                "  ARPG-style ground &",
+                "  corpse loot filter."),
             new BookPageInfo(
                 "PLAYER COMMANDS 3",
                 "-------------------",
-                "[LootFilter",
-                "  ARPG-style ground &",
-                "  corpse loot filter.",
-                "",
                 "[ApexHunt",
                 "  PvM hunt standing.",
                 "",
+                "[SlowGrind",
+                "  View 100+ skill pace.",
+                "",
                 "[ApexHuntToggle",
-                "  Toggles hunt HUD."),
+                "  Toggles hunt HUD.",
+                "",
+                "[ApexHuntTop",
+                "  View hunt rankings."),
+            new BookPageInfo(
+                "PLAYER COMMANDS 4",
+                "-------------------",
+                "[guide / [newguide",
+                "  Opens or receives the",
+                "  latest Adventurer's",
+                "  Guide edition.",
+                "",
+                "[guidebook / [getguide",
+                "  Aliases for [guide.",
+                "",
+                "[newguidebook",
+                "  Alias for [guide."),
+            new BookPageInfo(
+                "LEGENDARY MASTER",
+                "-------------------",
+                "Seek the Master of",
+                "Skills for combat trials",
+                "to earn +5 PowerScrolls",
+                "up to 120 (Legendary)!",
+                "",
+                "* Requires 100.0 (GM)",
+                "  at current skill cap.",
+                "* Slay assigned dungeon",
+                "  bosses before time",
+                "  expires to win scroll."),
+            new BookPageInfo(
+                "MASTER COMMANDS",
+                "-------------------",
+                "Stand near the Master",
+                "(within 5 tiles) and",
+                "speak aloud or",
+                "double-click him:",
+                "",
+                "give task",
+                "  Starts hunting trial.",
+                "  Upon completion, choose",
+                "  your skill via gump!",
+                "",
+                "remove task",
+                "  Abandons active task."),
             new BookPageInfo(
                 "STABLES & REPAIRS",
                 "-------------------",
@@ -257,6 +322,48 @@ namespace Server.Custom
             Hue = 0x482; // Antique gilded hue
             LootType = LootType.Blessed;
             Weight = 1.0;
+        }
+
+        public static new void Initialize()
+        {
+            CommandSystem.Register("Guide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("GuideBook", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("GetGuide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("NewGuide", AccessLevel.Player, Guide_OnCommand);
+            CommandSystem.Register("NewGuideBook", AccessLevel.Player, Guide_OnCommand);
+        }
+
+        [Usage("Guide")]
+        [Aliases("GuideBook", "GetGuide", "NewGuide", "NewGuideBook")]
+        [Description("Opens your Adventurer's Guide or provides a fresh copy updated to the latest edition.")]
+        private static void Guide_OnCommand(CommandEventArgs e)
+        {
+            Mobile from = e.Mobile;
+            if (from == null)
+                return;
+
+            if (from.Backpack == null)
+            {
+                from.SendMessage(38, "You must have a backpack to receive a guide book.");
+                return;
+            }
+
+            FesterUOGuideBook existing = from.Backpack.FindItemByType<FesterUOGuideBook>();
+
+            if (existing != null)
+            {
+                existing.Delete();
+                from.SendMessage(68, "Your Adventurer's Guide has been updated to the latest edition.");
+            }
+            else
+            {
+                from.SendMessage(68, "A blessed Adventurer's Guide has been placed in your backpack.");
+            }
+
+            FesterUOGuideBook guide = new FesterUOGuideBook();
+            from.Backpack.DropItem(guide);
+            from.PlaySound(0x249);
+            guide.OnDoubleClick(from);
         }
 
         public FesterUOGuideBook(Serial serial) : base(serial)

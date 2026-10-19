@@ -52,6 +52,72 @@ namespace Server.Items
         public TMapFilter Filter { get { return m_Filter; } }
         public int ItemCount { get { return m_ItemCount; } set { m_ItemCount = value; } }
 
+        public static int UpgradeCostPerLevel => Config.Get("TreasureMaps.UpgradeCostPerLevel", 10000);
+        public static int MaxUpgradeLevel => Config.Get("TreasureMaps.MaxUpgradeLevel", 6);
+        public static int SOSUpgradeCostPerLevel => Config.Get("TreasureMaps.SOSUpgradeCostPerLevel", Config.Get("SOS.UpgradeCostPerLevel", 10000));
+        public static int SOSMaxUpgradeLevel => Math.Min(3, Config.Get("TreasureMaps.SOSMaxUpgradeLevel", Config.Get("SOS.MaxUpgradeLevel", 3)));
+
+        public static int GetBankGold(Mobile from)
+        {
+            if (from == null)
+                return 0;
+
+            return Banker.GetBalance(from);
+        }
+
+        public static int GetPackGold(Mobile from)
+        {
+            if (from == null || from.Backpack == null)
+                return 0;
+
+            Item[] goldItems = from.Backpack.FindItemsByType(typeof(Gold), true);
+            long total = 0;
+
+            for (int i = 0; i < goldItems.Length; ++i)
+            {
+                total += goldItems[i].Amount;
+            }
+
+            return (int)Math.Min(int.MaxValue, total);
+        }
+
+        public static int GetTotalGold(Mobile from)
+        {
+            if (from == null)
+                return 0;
+
+            long total = (long)GetBankGold(from) + (long)GetPackGold(from);
+            return (int)Math.Min(int.MaxValue, total);
+        }
+
+        public static bool DeductGold(Mobile from, int amount)
+        {
+            if (from == null || amount <= 0)
+                return false;
+
+            int bankBal = GetBankGold(from);
+            int packBal = GetPackGold(from);
+
+            if ((long)bankBal + (long)packBal < amount)
+                return false;
+
+            int fromBank = Math.Min(amount, bankBal);
+            int fromPack = amount - fromBank;
+
+            if (fromBank > 0)
+            {
+                if (!Banker.Withdraw(from, fromBank, false))
+                    return false;
+            }
+
+            if (fromPack > 0 && from.Backpack != null)
+            {
+                from.Backpack.ConsumeTotal(typeof(Gold), fromPack, true);
+            }
+
+            return true;
+        }
+
         public override void OnDoubleClick(Mobile from)
         {
             if (!from.InRange(GetWorldLocation(), 2))
@@ -311,7 +377,7 @@ namespace Server.Items
 
             private readonly TMapBook m_Book;
 
-            public NameBookEntry(Mobile from, TMapBook book) : base(6216)
+            public NameBookEntry(Mobile from, TMapBook book) : base(1011299) // Rename book
             {
                 m_From = from;
                 m_Book = book;

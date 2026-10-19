@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-19
+
 - Added Dedicated Bulk Order Master NPC & 8-in-1 Crafting Hub ([`BulkOrderMaster.cs`](custom-scripts/FesterUO/BulkOrderMaster.cs)) and configuration in [`Config/FesterUO/BulkOrders.cfg`](Config/FesterUO/BulkOrders.cfg):
   - Spawns an artisan guildmaster mobile (`BulkOrderMaster`) placed via `[add BulkOrderMaster` (defaults to frozen, invulnerable, and blessed) designed for placement in town crafting centers, market squares, or player workshops.
   - Interactive 8-in-1 Gump (`BulkOrderMasterGump`): Accessible via double-clicking, speech keywords ("bod", "order", "bulk", "craft", "reward", "trade"), or right-click context menu ("Bulk Order Info"). Displays an overview of all 8 craft disciplines (Blacksmithing, Tailoring, Tinkering, Carpentry, Bowcraft/Fletching, Alchemy, Inscription, Cooking) with current skill values, banked reward points, countdown timers, and cached deed indicators.

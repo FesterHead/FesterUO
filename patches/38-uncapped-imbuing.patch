@@ -1,0 +1,353 @@
+diff --git a/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs b/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs
+index a59552cc..8c061b4b 100644
+--- a/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs
++++ b/Scripts/Services/LootGeneration/Imbuing/Core/Imbuing.cs
+@@ -120,7 +120,11 @@ namespace Server.SkillHandlers
+ 
+         public static bool OnBeforeImbue(Mobile from, Item item, int id, int value, int totalprops, int maxprops, int totalitemweight, int maxweight)
+         {
+-            if (totalprops >= maxprops || totalitemweight > maxweight)
++            bool uncapProps = Config.Get("Imbuing.UncapPropertyCount", true);
++            bool uncapWeight = Config.Get("Imbuing.UncapPropertyWeight", true);
++            bool onlyHigher = Config.Get("Imbuing.OnlyHigherExistingValues", true);
++
++            if ((!uncapProps && totalprops >= maxprops) || (!uncapWeight && totalitemweight > maxweight))
+             {
+                 from.SendLocalizedMessage(1079772); // You cannot imbue this item with any more item properties.
+                 from.CloseGump(typeof(ImbueGump));
+@@ -128,6 +132,26 @@ namespace Server.SkillHandlers
+                 return false;
+             }
+ 
++            if (onlyHigher && id > 0)
++            {
++                int curVal = GetValueForID(item, id);
++                int maxInt = ItemPropertyInfo.GetMaxIntensity(item, id, true);
++                if (curVal >= maxInt && maxInt > 0)
++                {
++                    from.SendMessage("This property is already at maximum intensity ({0}) on this item.", curVal);
++                    from.CloseGump(typeof(ImbueGump));
++                    from.EndAction(typeof(Imbuing));
++                    return false;
++                }
++                if (value > 0 && curVal > 0 && value <= curVal)
++                {
++                    from.SendMessage("The item already has this property at an equal or higher intensity ({0}).", curVal);
++                    from.CloseGump(typeof(ImbueGump));
++                    from.EndAction(typeof(Imbuing));
++                    return false;
++                }
++            }
++
+             return true;
+         }
+ 
+@@ -254,6 +278,12 @@ namespace Server.SkillHandlers
+ 
+         public static double GetSuccessChance(Mobile from, Item item, int totalItemIntensity, int propintensity, double bonus)
+         {
++            int maxDiffWeight = Config.Get("Imbuing.MaxDifficultyWeight", 450);
++            if (maxDiffWeight > 0 && totalItemIntensity > maxDiffWeight)
++            {
++                totalItemIntensity = maxDiffWeight;
++            }
++
+             double skill = from.Skills[SkillName.Imbuing].Value;
+             double resultWeight = totalItemIntensity + propintensity;
+ 
+@@ -286,7 +316,12 @@ namespace Server.SkillHandlers
+                 }
+             }*/
+ 
+-            return Math.Max(0, Math.Round(Math.Floor(20 * skill + 10 * a * Math.Pow(e, (b / (resultWeight + c))) + 10 * w - 2400) / 1000 * (i) + bonus, 3) * 100);
++            double minSuccess = Config.Get("Imbuing.MinSuccessChance", 5.0);
++            double chance = Math.Max(0, Math.Round(Math.Floor(20 * skill + 10 * a * Math.Pow(e, (b / (resultWeight + c))) + 10 * w - 2400) / 1000 * (i) + bonus, 3) * 100);
++            if (skill >= 100.0 && chance < minSuccess)
++                chance = minSuccess;
++
++            return chance;
+         }
+ 
+         public static int GetQualityBonus(Item item)
+@@ -358,7 +393,18 @@ namespace Server.SkillHandlers
+                 var propImbuingweight = (int)(((double)def.Weight / (double)maxint) * value);
+                 var propTrueWeight = (int)(((double)propImbuingweight / (double)def.Weight) * 100);
+ 
+-                if ((imbuingWeight + propImbuingweight) > maxWeight)
++                if (Config.Get("Imbuing.OnlyHigherExistingValues", true) && value > 0)
++                {
++                    int curVal = GetValueForID(i, id);
++                    if (curVal > 0 && value <= curVal)
++                    {
++                        from.SendMessage("The item already has this property at an equal or higher intensity ({0}).", curVal);
++                        from.CloseGump(typeof(ImbueGump));
++                        return;
++                    }
++                }
++
++                if (!Config.Get("Imbuing.UncapPropertyWeight", true) && (imbuingWeight + propImbuingweight) > maxWeight)
+                 {
+                     from.SendLocalizedMessage(1079772); // You cannot imbue this item with any more item properties.
+                     from.CloseGump(typeof(ImbueGump));
+@@ -421,22 +467,25 @@ namespace Server.SkillHandlers
+             {
+                 var wep = (BaseWeapon)item;
+ 
+-                // New property replaces the old one, so lets set them all to 0
+-                if (id >= 30 && id <= 34)
+-                {
+-                    wep.WeaponAttributes.HitPhysicalArea = 0;
+-                    wep.WeaponAttributes.HitFireArea = 0;
+-                    wep.WeaponAttributes.HitColdArea = 0;
+-                    wep.WeaponAttributes.HitPoisonArea = 0;
+-                    wep.WeaponAttributes.HitEnergyArea = 0;
+-                }
+-                else if (id >= 35 && id <= 39)
++                if (!Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
+                 {
+-                    wep.WeaponAttributes.HitMagicArrow = 0;
+-                    wep.WeaponAttributes.HitHarm = 0;
+-                    wep.WeaponAttributes.HitFireball = 0;
+-                    wep.WeaponAttributes.HitLightning = 0;
+-                    wep.WeaponAttributes.HitDispel = 0;
++                    // New property replaces the old one, so lets set them all to 0
++                    if (id >= 30 && id <= 34)
++                    {
++                        wep.WeaponAttributes.HitPhysicalArea = 0;
++                        wep.WeaponAttributes.HitFireArea = 0;
++                        wep.WeaponAttributes.HitColdArea = 0;
++                        wep.WeaponAttributes.HitPoisonArea = 0;
++                        wep.WeaponAttributes.HitEnergyArea = 0;
++                    }
++                    else if (id >= 35 && id <= 39)
++                    {
++                        wep.WeaponAttributes.HitMagicArrow = 0;
++                        wep.WeaponAttributes.HitHarm = 0;
++                        wep.WeaponAttributes.HitFireball = 0;
++                        wep.WeaponAttributes.HitLightning = 0;
++                        wep.WeaponAttributes.HitDispel = 0;
++                    }
+                 }
+             }
+ 
+@@ -445,13 +494,16 @@ namespace Server.SkillHandlers
+                 var jewel = (BaseJewel)item;
+                 var group = GetSkillGroup((SkillName)ItemPropertyInfo.GetAttribute(id));
+ 
+-                //Removes skill bonus if that group already exists on the item
+-                for (int j = 0; j < 5; j++)
++                if (!Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
+                 {
+-                    if (jewel.SkillBonuses.GetBonus(j) > 0 && group.Any(sk => sk == jewel.SkillBonuses.GetSkill(j)))
++                    //Removes skill bonus if that group already exists on the item
++                    for (int j = 0; j < 5; j++)
+                     {
+-                        jewel.SkillBonuses.SetBonus(j, 0.0);
+-                        jewel.SkillBonuses.SetSkill(j, SkillName.Alchemy);
++                        if (jewel.SkillBonuses.GetBonus(j) > 0 && group.Any(sk => sk == jewel.SkillBonuses.GetSkill(j)))
++                        {
++                            jewel.SkillBonuses.SetBonus(j, 0.0);
++                            jewel.SkillBonuses.SetSkill(j, SkillName.Alchemy);
++                        }
+                     }
+                 }
+             }
+@@ -563,7 +615,22 @@ namespace Server.SkillHandlers
+ 
+                 else if (prop is SlayerName)
+                 {
+-                    wep.Slayer = (SlayerName)prop;
++                    SlayerName slayer = (SlayerName)prop;
++                    if (Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
++                    {
++                        if (wep.Slayer == SlayerName.None)
++                            wep.Slayer = slayer;
++                        else if (wep.Slayer == slayer)
++                            wep.Slayer = slayer;
++                        else if (wep.Slayer2 == SlayerName.None)
++                            wep.Slayer2 = slayer;
++                        else
++                            wep.Slayer = slayer;
++                    }
++                    else
++                    {
++                        wep.Slayer = slayer;
++                    }
+                 }
+                 else if (prop is SAAbsorptionAttribute)
+                 {
+@@ -727,7 +794,17 @@ namespace Server.SkillHandlers
+                     SkillName skill = (SkillName)prop;
+                     var bonuses = jewel.SkillBonuses;
+ 
+-                    var index = GetAvailableSkillIndex(bonuses);
++                    int index = -1;
++                    for (int j = 0; j < 5; j++)
++                    {
++                        if (bonuses.GetBonus(j) > 0 && bonuses.GetSkill(j) == skill)
++                        {
++                            index = j;
++                            break;
++                        }
++                    }
++                    if (index == -1)
++                        index = GetAvailableSkillIndex(bonuses);
+ 
+                     if (index >= 0 && index <= 4)
+                     {
+@@ -871,6 +948,9 @@ namespace Server.SkillHandlers
+ 
+         public static int GetMaxWeight(object item)
+         {
++            if (Config.Get("Imbuing.UncapPropertyWeight", true))
++                return 100000;
++
+             int maxWeight = 450;
+ 
+             IQuality quality = item as IQuality;
+@@ -899,6 +979,9 @@ namespace Server.SkillHandlers
+ 
+         public static int GetMaxProps(Item item)
+         {
++            if (Config.Get("Imbuing.UncapPropertyCount", true))
++                return 100;
++
+             return 5;
+         }
+ 
+@@ -1796,7 +1879,7 @@ namespace Server.SkillHandlers
+                 else if (attr is SAAbsorptionAttribute)
+                     return w.AbsorptionAttributes[(SAAbsorptionAttribute)attr];
+ 
+-                else if (attr is SlayerName && w.Slayer == (SlayerName)attr)
++                else if (attr is SlayerName && (w.Slayer == (SlayerName)attr || w.Slayer2 == (SlayerName)attr))
+                     return 1;
+ 
+                 else if (id == 60 && item is BaseRanged)
+diff --git a/Scripts/Services/LootGeneration/Imbuing/Gumps/ImbueGump.cs b/Scripts/Services/LootGeneration/Imbuing/Gumps/ImbueGump.cs
+index 6f164230..de75aecf 100644
+--- a/Scripts/Services/LootGeneration/Imbuing/Gumps/ImbueGump.cs
++++ b/Scripts/Services/LootGeneration/Imbuing/Gumps/ImbueGump.cs
+@@ -56,9 +56,20 @@ namespace Server.Gumps
+             int maxInt = ItemPropertyInfo.GetMaxIntensity(m_Item, m_ID, true);
+             int weight = m_Info.Weight;
+ 
++            int curVal = Imbuing.GetValueForID(m_Item, m_ID);
++
+             if (m_Value < minInt)
+             {
+-                m_Value = minInt;
++                if (Server.Config.Get("Imbuing.OnlyHigherExistingValues", true) && curVal > 0)
++                {
++                    int scale = ItemPropertyInfo.GetScale(m_Item, m_ID);
++                    if (scale <= 0) scale = 1;
++                    m_Value = curVal < maxInt ? Math.Min(maxInt, curVal + scale) : maxInt;
++                }
++                else
++                {
++                    m_Value = minInt;
++                }
+             }
+ 
+             if (m_Value > maxInt)
+@@ -152,7 +163,7 @@ namespace Server.Gumps
+             AddHtmlLocalized(350, 200, 150, 20, 1113650, LabelColor, false, false); // RESULTS
+ 
+             AddHtmlLocalized(280, 220, 150, 20, 1113645, LabelColor, false, false); // Properties:
+-            AddLabel(430, 220, GetColor(m_TotalProps + 1, 5), String.Format("{0}/{1}", m_TotalProps + 1, Imbuing.GetMaxProps(m_Item)));
++            AddLabel(430, 220, GetColor(m_TotalProps + 1, Imbuing.GetMaxProps(m_Item)), String.Format("{0}/{1}", m_TotalProps + 1, Imbuing.GetMaxProps(m_Item)));
+ 
+             int projWeight = m_TotalItemWeight + propWeight;
+             AddHtmlLocalized(280, 240, 150, 20, 1113646, LabelColor, false, false); // Total Property Weight:
+@@ -286,21 +297,30 @@ namespace Server.Gumps
+                     }
+                 case 10051: // Decrease Mod Value [<]
+                     {
+-                        m_Value = Math.Max(ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID), m_Value - 1);
++                        int minAllowed = (Server.Config.Get("Imbuing.OnlyHigherExistingValues", true) && Imbuing.GetValueForID(m_Item, m_Info.ID) > 0) 
++                            ? Math.Min(ItemPropertyInfo.GetMaxIntensity(m_Item, m_Info.ID, true), Imbuing.GetValueForID(m_Item, m_Info.ID) + 1) 
++                            : ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID);
++                        m_Value = Math.Max(minAllowed, m_Value - 1);
+                         Refresh();
+ 
+                         break;
+                     }
+                 case 10052:// Decrease Mod Value [<<]
+                     {
+-                        m_Value = Math.Max(ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID), m_Value - 10);
++                        int minAllowed = (Server.Config.Get("Imbuing.OnlyHigherExistingValues", true) && Imbuing.GetValueForID(m_Item, m_Info.ID) > 0) 
++                            ? Math.Min(ItemPropertyInfo.GetMaxIntensity(m_Item, m_Info.ID, true), Imbuing.GetValueForID(m_Item, m_Info.ID) + 1) 
++                            : ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID);
++                        m_Value = Math.Max(minAllowed, m_Value - 10);
+                         Refresh();
+                         
+                         break;
+                     }
+                 case 10053:// Minimum Mod Value [<<<]
+                     {
+-                        m_Value = ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID);
++                        int minAllowed = (Server.Config.Get("Imbuing.OnlyHigherExistingValues", true) && Imbuing.GetValueForID(m_Item, m_Info.ID) > 0) 
++                            ? Math.Min(ItemPropertyInfo.GetMaxIntensity(m_Item, m_Info.ID, true), Imbuing.GetValueForID(m_Item, m_Info.ID) + 1) 
++                            : ItemPropertyInfo.GetMinIntensity(m_Item, m_Info.ID);
++                        m_Value = minAllowed;
+                         Refresh();
+                         
+                         break;
+@@ -334,6 +354,13 @@ namespace Server.Gumps
+                     }
+                 case 10100:  // Imbue the Item
+                     {
++                        int curVal = Imbuing.GetValueForID(m_Item, m_ID);
++                        if (Server.Config.Get("Imbuing.OnlyHigherExistingValues", true) && curVal > 0 && m_Value <= curVal)
++                        {
++                            User.SendMessage("The item already has this property at an equal or higher intensity ({0}).", curVal);
++                            break;
++                        }
++
+                         context.Imbue_IWmax = m_MaxWeight;
+ 
+                         if (Imbuing.OnBeforeImbue(User, m_Item, m_ID, m_Value, m_TotalProps, Imbuing.GetMaxProps(m_Item), m_TotalItemWeight, m_MaxWeight))
+@@ -370,6 +397,13 @@ namespace Server.Gumps
+                 // Slayers replace Slayers
+                 if (id >= 101 && id <= 127)
+                 {
++                    if (Server.Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
++                    {
++                        if (i.Slayer != SlayerName.None && i.Slayer2 != SlayerName.None)
++                            return GetNameForAttribute(i.Slayer);
++                        return null;
++                    }
++
+                     if (i.Slayer != SlayerName.None)
+                         return GetNameForAttribute(i.Slayer);
+ 
+@@ -379,6 +413,9 @@ namespace Server.Gumps
+                 // OnHitEffect replace OnHitEffect
+                 if (id >= 35 && id <= 39)
+                 {
++                    if (Server.Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
++                        return null;
++
+                     if (i.WeaponAttributes.HitMagicArrow > 0)
+                         return GetNameForAttribute(AosWeaponAttribute.HitMagicArrow);
+                     else if (i.WeaponAttributes.HitHarm > 0)
+@@ -393,6 +430,9 @@ namespace Server.Gumps
+                 // OnHitArea replace OnHitArea
+                 if (id >= 30 && id <= 34)
+                 {
++                    if (Server.Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
++                        return null;
++
+                     if (i.WeaponAttributes.HitPhysicalArea > 0)
+                         return GetNameForAttribute(AosWeaponAttribute.HitPhysicalArea);
+                     else if (i.WeaponAttributes.HitColdArea > 0)
+@@ -411,6 +451,9 @@ namespace Server.Gumps
+ 
+                 if (id >= 151 && id <= 183)
+                 {
++                    if (Server.Config.Get("Imbuing.AllowMultipleSpecialEffects", true))
++                        return null;
++
+                     var bonuses = jewel.SkillBonuses;
+                     var group = Imbuing.GetSkillGroup((SkillName)ItemPropertyInfo.GetAttribute(id));
+ 

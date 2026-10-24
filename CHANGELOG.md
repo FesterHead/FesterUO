@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- Added Uncapped Imbuing System ([`38-uncapped-imbuing.patch`](patches/38-uncapped-imbuing.patch)) and configuration in [`Config/FesterUO/Imbuing.cfg`](Config/FesterUO/Imbuing.cfg):
+  - **Uncapped Property Count**: Removed the hardcoded 5-property limit (`Imbuing.UncapPropertyCount=true`), allowing players to imbue as many valid attributes as equipment types support.
+  - **Uncapped Property Weight**: Removed the 450–500 total item weight limit (`Imbuing.UncapPropertyWeight=true`), allowing players to continue imbuing beyond standard intensity totals.
+  - **Multiple Special Effects**: Weapons and jewelry can retain multiple special effects without mutual cancellation (`Imbuing.AllowMultipleSpecialEffects=true`). Weapons can now carry multiple Hit Area effects, multiple Hit Spells, and both primary (`Slayer`) and secondary (`Slayer2`) slayers. Jewelry skill bonuses no longer wipe other skills in the same group.
+  - **Property Upgrade Protection**: Imbuing an existing property requires the new imbue value to exceed the current value (`Imbuing.OnlyHigherExistingValues=true`). Prevents accidental downgrades, adjusts gump defaults to current value + scale, locks minimum slider adjustment to above the current value, and blocks attempts to overwrite equal or higher intensities.
+  - **Imbuing Scaling & Difficulty Floor**: Capped the success calculation's total weight input to 450 (`Imbuing.MaxDifficultyWeight=450`), preventing success chances from collapsing to 0% at high property counts, and established a 5.0% minimum success floor for Grandmaster+ imbuers (`Imbuing.MinSuccessChance=5.0`).
+
+
 ## [1.1.0] - 2026-10-19
 
 - Added Dedicated Bulk Order Master NPC & 8-in-1 Crafting Hub ([`BulkOrderMaster.cs`](custom-scripts/FesterUO/BulkOrderMaster.cs)) and configuration in [`Config/FesterUO/BulkOrders.cfg`](Config/FesterUO/BulkOrders.cfg):
